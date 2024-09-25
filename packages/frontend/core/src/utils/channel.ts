@@ -10,6 +10,18 @@ export const appSchemes = z.enum([
 
 const appChannelSchemes = z.enum(['stable', 'canary', 'beta', 'internal']);
 
+export const appSchemaUrl = z.custom<string>(
+  url => {
+    try {
+      return appSchemes.safeParse(new URL(url).protocol.replace(':', ''))
+        .success;
+    } catch (e) {
+      return false;
+    }
+  },
+  { message: 'Invalid URL or protocol' }
+);
+
 export type Scheme = z.infer<typeof appSchemes>;
 export type Channel = z.infer<typeof appChannelSchemes>;
 

@@ -172,8 +172,12 @@ export class DesktopApiService extends Service {
             break;
           }
           case 'oauth': {
-            const { code, state, provider } = payload;
-            await authService.signInOauth(code, state, provider);
+            const { code, state, provider, token } = payload;
+            if (token) {
+              await authService.signInOauthToken(token, provider);
+            } else {
+              await authService.signInOauth(code, state, provider);
+            }
             break;
           }
         }

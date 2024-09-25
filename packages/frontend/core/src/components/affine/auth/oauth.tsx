@@ -1,5 +1,5 @@
 import { Button } from '@affine/component/ui/button';
-import { ServerService } from '@affine/core/modules/cloud';
+import { AuthService, ServerService } from '@affine/core/modules/cloud';
 import { UrlService } from '@affine/core/modules/url';
 import { OAuthProviderType } from '@affine/graphql';
 import track from '@affine/track';
@@ -53,43 +53,44 @@ export function OAuth({ redirectUrl }: { redirectUrl?: string }) {
   ));
 }
 
+type OAuthProviderProps = {
+  provider: OAuthProviderType;
+  redirectUrl?: string;
+  scheme?: string;
+  popupWindow: (url: string) => void;
+};
+
 function OAuthProvider({
   provider,
   redirectUrl,
   scheme,
   popupWindow,
-}: {
-  provider: OAuthProviderType;
-  redirectUrl?: string;
-  scheme?: string;
-  popupWindow: (url: string) => void;
-}) {
-  const serverService = useService(ServerService);
+}: OAuthProviderProps) {
+  const auth = useService(AuthService);
   const { icon } = OAuthProviderMap[provider];
 
   const onClick = useCallback(() => {
-    const params = new URLSearchParams();
-
-    params.set('provider', provider);
-
-    if (redirectUrl) {
-      params.set('redirect_uri', redirectUrl);
+    async function preflight() {
+      if (ignore) return;
+      const url = await auth.oauthPreflight(
+        provider,
+        scheme,
+        false,
+        redirectUrl
+      );
+      if (!ignore) {
+        track.$.$.auth.signIn({ method: 'oauth', provider });
+        popupWindow(url);
+      }
     }
 
-    if (scheme) {
-      params.set('client', scheme);
-    }
-
-    // TODO: Android app scheme not implemented
-    // if (BUILD_CONFIG.isAndroid) {}
-
-    const oauthUrl =
-      serverService.server.baseUrl + `/oauth/login?${params.toString()}`;
-
-    track.$.$.auth.signIn({ method: 'oauth', provider });
-
-    popupWindow(oauthUrl);
-  }, [popupWindow, provider, redirectUrl, scheme, serverService]);
+    let ignore = false;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    preflight();
+    return () => {
+      ignore = true;
+    };
+  }, [auth, popupWindow, provider, redirectUrl, scheme]);
 
   return (
     <Button
