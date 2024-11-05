@@ -35,7 +35,7 @@ const LoginParams = z.object({
 });
 
 // handle legacy clients oauth login
-@Controller('/oauth')
+@Controller('/')
 export class OAuthLegacyController {
   private readonly logger = new Logger(OAuthLegacyController.name);
   private readonly clientSchema: z.ZodEnum<any>;
@@ -57,7 +57,8 @@ export class OAuthLegacyController {
   }
 
   @Public()
-  @Get('/login')
+  @Get('/oauth/login')
+  @Get('/desktop-signin')
   @HttpCode(HttpStatus.OK)
   async legacyLogin(
     @Res() res: Response,

@@ -4,7 +4,7 @@ import { AuthModule } from '../../core/auth';
 import { ServerFeature } from '../../core/config';
 import { UserModule } from '../../core/user';
 import { Plugin } from '../registry';
-import { OAuthController } from './controller';
+import { OAuthController, OAuthLegacyController } from './controller';
 import { OAuthProviders } from './providers';
 import { OAuthProviderFactory } from './register';
 import { OAuthResolver } from './resolver';
@@ -19,7 +19,7 @@ import { OAuthService } from './service';
     OAuthResolver,
     ...OAuthProviders,
   ],
-  controllers: [OAuthController],
+  controllers: [OAuthController, OAuthLegacyController],
   contributesTo: ServerFeature.OAuth,
   if: config => config.flavor.graphql && !!config.plugins.oauth,
 })

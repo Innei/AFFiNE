@@ -139,21 +139,9 @@ export const topLevelRoutes = [
           import(/* webpackChunkName: "auth" */ './pages/auth/magic-link'),
       },
       {
-        path: '/oauth/login',
-        lazy: () =>
-          import(/* webpackChunkName: "auth" */ './pages/auth/oauth-login'),
-      },
-      {
         path: '/oauth/callback',
         lazy: () =>
           import(/* webpackChunkName: "auth" */ './pages/auth/oauth-callback'),
-      },
-      // deprecated, keep for old client compatibility
-      // TODO(@forehalo): remove
-      {
-        path: '/desktop-signin',
-        lazy: () =>
-          import(/* webpackChunkName: "auth" */ './pages/auth/oauth-login'),
       },
       // deprecated, keep for old client compatibility
       // use '/sign-in'
