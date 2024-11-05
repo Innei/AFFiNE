@@ -137,7 +137,7 @@ export class OAuthController {
     @Body('provider') unknownProviderName?: string,
     @Body('redirect_uri') redirectUri?: string,
     @Body('client') clientId?: string,
-    @Body('state') state?: string
+    @Body('state') clientState?: string
   ) {
     if (!unknownProviderName) {
       throw new MissingOauthQueryParameter({ name: 'provider' });
@@ -151,16 +151,16 @@ export class OAuthController {
       throw new UnknownOauthProvider({ name: unknownProviderName });
     }
 
-    const token = await this.oauth.saveOAuthState({
+    const oAuthToken = await this.oauth.saveOAuthState({
       provider: providerName,
       redirectUri,
       // new client will generate the state from the client side
       clientId,
-      state,
+      state: clientState,
     });
 
     return {
-      url: provider.getAuthUrl(token),
+      url: provider.getAuthUrl(oAuthToken),
     };
   }
 
@@ -170,37 +170,39 @@ export class OAuthController {
   async redirect(
     @Res() res: Response,
     @Query('code') code: string,
-    @Query('state') state: string
+    @Query('state') oAuthToken: string
   ) {
     if (!code) {
       throw new MissingOauthQueryParameter({ name: 'code' });
     }
-    if (!state) {
+    if (!oAuthToken) {
       throw new MissingOauthQueryParameter({ name: 'state' });
     }
 
-    const oauthState = await this.oauth.getOAuthState(state);
+    const oAuthState = await this.oauth.getOAuthState(oAuthToken);
 
-    if (oauthState?.state) {
+    if (oAuthState?.state) {
       // redirect from new client, need exchange cookie by client state
       // we only cache the code and access token in server side
-      const provider = this.providerFactory.get(oauthState.provider);
+      const provider = this.providerFactory.get(oAuthState.provider);
       if (!provider) {
         throw new UnknownOauthProvider({
-          name: oauthState.provider ?? 'unknown',
+          name: oAuthState.provider ?? 'unknown',
         });
       }
-      const token = await this.oauth.saveOAuthState({ ...oauthState, code });
+      const token = await this.oauth.saveOAuthState({ ...oAuthState, code });
       res.redirect(
         this.url.link('/oauth/callback', {
           token,
-          client: oauthState.clientId,
-          provider: oauthState.provider,
+          client: oAuthState.clientId,
+          provider: oAuthState.provider,
         })
       );
     } else {
       // compatible with old client
-      res.redirect(this.url.link('/oauth/callback', { code, state }));
+      res.redirect(
+        this.url.link('/oauth/callback', { code, state: oAuthState })
+      );
     }
   }
 
@@ -211,15 +213,15 @@ export class OAuthController {
     @Req() req: Request,
     @Res() res: Response,
     /** @deprecated */ @Body('code') code?: string,
-    @Body('state') stateStr?: string,
+    @Body('state') oAuthStateStr?: string,
     // new client will send token to exchange cookie
     @Body('token') token?: string
   ) {
-    if (token && stateStr) {
+    if (token && oAuthStateStr) {
       // new method, need exchange cookie by client state
       // we only cache the code and access token in server side
       const authState = await this.oauth.getOAuthState(token);
-      if (!authState || authState.state !== stateStr || !authState.code) {
+      if (!authState || authState.state !== oAuthStateStr || !authState.code) {
         throw new OauthStateExpired();
       }
 
@@ -254,15 +256,18 @@ export class OAuthController {
         throw new MissingOauthQueryParameter({ name: 'code' });
       }
 
-      if (!stateStr) {
+      if (!oAuthStateStr) {
         throw new MissingOauthQueryParameter({ name: 'state' });
       }
 
-      if (typeof stateStr !== 'string' || !this.oauth.isValidState(stateStr)) {
+      if (
+        typeof oAuthStateStr !== 'string' ||
+        !this.oauth.isValidState(oAuthStateStr)
+      ) {
         throw new InvalidOauthCallbackState();
       }
 
-      const state = await this.oauth.getOAuthState(stateStr);
+      const state = await this.oauth.getOAuthState(oAuthStateStr);
 
       if (!state) {
         throw new OauthStateExpired();
