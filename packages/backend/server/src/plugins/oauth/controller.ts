@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Post,
   Query,
   Req,
@@ -11,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ConnectedAccount, PrismaClient } from '@prisma/client';
 import type { Request, Response } from 'express';
+import { z } from 'zod';
 
 import {
   InvalidOauthCallbackState,
@@ -20,12 +22,102 @@ import {
   UnknownOauthProvider,
   URLHelper,
 } from '../../base';
-import { AuthService, Public } from '../../core/auth';
+import { AuthService, Public, Session } from '../../core/auth';
 import { UserService } from '../../core/user';
 import { OAuthProviderName } from './config';
 import { OAuthAccount, Tokens } from './providers/def';
 import { OAuthProviderFactory } from './register';
 import { OAuthService } from './service';
+
+const LoginParams = z.object({
+  provider: z.nativeEnum(OAuthProviderName),
+  client: z.enum([
+    'web',
+    'affine',
+    'affine-canary',
+    'affine-beta',
+    ...(AFFiNE.node.dev ? ['affine-dev'] : []),
+  ]),
+  redirectUri: z.string().optional(),
+});
+
+// handle legacy clients oauth login
+@Controller('/oauth')
+export class OAuthLegacyController {
+  private readonly logger = new Logger(OAuthLegacyController.name);
+
+  constructor(
+    private readonly auth: AuthService,
+    private readonly oauth: OAuthService,
+    private readonly providerFactory: OAuthProviderFactory,
+    private readonly url: URLHelper
+  ) {}
+
+  @Public()
+  @Get('/login')
+  @HttpCode(HttpStatus.OK)
+  async preflight(
+    @Res() res: Response,
+    @Session() session: Session | undefined,
+    @Body('provider') provider?: string,
+    @Body('redirect_uri') redirectUri?: string,
+    @Body('client') client?: string
+  ) {
+    // sign out first, web only
+    if (client === 'web' && session) {
+      await this.auth.signOut(session.sessionId);
+      await this.auth.refreshCookies(res, session.sessionId);
+    }
+
+    const params = LoginParams.safeParse({
+      provider: provider?.toLowerCase(),
+      redirectUri,
+      client,
+    });
+    if (params.error) {
+      return res.redirect(
+        this.url.link('/sign-in', {
+          error: `Invalid oauth parameters`,
+        })
+      );
+    } else {
+      const { provider: providerName, redirectUri, client } = params.data;
+      const provider = this.providerFactory.get(providerName);
+      if (!provider) {
+        throw new UnknownOauthProvider({ name: providerName });
+      }
+
+      try {
+        const token = await this.oauth.saveOAuthState({
+          provider: providerName,
+          redirectUri,
+          clientId: client,
+        });
+        // legacy client state assemble
+        const oAuthUrl = new URL(provider.getAuthUrl(token));
+        oAuthUrl.searchParams.set(
+          'state',
+          JSON.stringify({
+            state: oAuthUrl.searchParams.get('state'),
+            client,
+            provider,
+          })
+        );
+        return res.redirect(oAuthUrl.toString());
+      } catch (e: any) {
+        this.logger.error(
+          `Failed to preflight oauth login for provider ${providerName}`,
+          e
+        );
+        return res.redirect(
+          this.url.link('/sign-in', {
+            error: `Invalid oauth provider parameters`,
+          })
+        );
+      }
+    }
+  }
+}
 
 @Controller('/api/oauth')
 export class OAuthController {
