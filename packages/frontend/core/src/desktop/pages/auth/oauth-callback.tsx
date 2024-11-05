@@ -21,7 +21,7 @@ const LoaderData = z.object({
 
 const ParsedState = z.object({
   payload: LoaderData,
-  client: supportedClient,
+  client: supportedClient.optional(),
 });
 
 type LoaderData = z.infer<typeof LoaderData>;
@@ -38,16 +38,13 @@ async function parseState(url: string): Promise<ParsedState> {
     return ParsedState.parse({ payload: { state, code, provider }, client });
   } catch {}
   // new client behavior
-  const {
-    token: state,
-    provider,
-    client,
-  } = await fetch('/api/oauth/exchangeToken', {
+  const { token, provider, client } = await fetch('/api/oauth/exchangeToken', {
     method: 'POST',
     body: JSON.stringify({ code, state: stateStr }),
     headers: { 'content-type': 'application/json' },
   }).then(r => r.json());
-  return ParsedState.parse({ payload: { state, provider }, client });
+  const payload = client ? { token } : { code, state: stateStr };
+  return ParsedState.parse({ payload: { ...payload, provider }, client });
 }
 
 export const loader: LoaderFunction = async args => {

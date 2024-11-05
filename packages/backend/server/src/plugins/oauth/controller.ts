@@ -220,7 +220,6 @@ export class OAuthController {
       // we only cache the code and access token in server side
       const authState = await this.oauth.getOAuthState(oAuthToken);
       if (!authState || authState.state !== inAppState || !authState.code) {
-        console.log('authState', authState, 'inAppState', inAppState);
         throw new OauthStateExpired();
       }
 
@@ -238,7 +237,7 @@ export class OAuthController {
 
       // NOTE: in web client, we don't need to exchange token
       // and provide the auth code directly
-      const tokens = await provider.getToken(code || authState.code);
+      const tokens = await provider.getToken(authState.code);
       const externAccount = await provider.getUser(tokens.accessToken);
       const user = await this.loginFromOauth(
         authState.provider,

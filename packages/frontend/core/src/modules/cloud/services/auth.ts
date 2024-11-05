@@ -210,7 +210,7 @@ export class AuthService extends Service {
     try {
       const res = await this.fetchService.fetch('/api/oauth/callback', {
         method: 'POST',
-        body: JSON.stringify({ code, state, secret: this.state }),
+        body: JSON.stringify({ code, state }),
         headers: {
           'content-type': 'application/json',
         },
