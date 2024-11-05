@@ -143,21 +143,21 @@ export class AuthService extends Service {
       // generate a random state for login flow
       this.state = nanoid();
 
-      const res = await this.fetchService.fetch('/api/oauth/preflight', {
-        method: 'POST',
-        body: JSON.stringify({
-          provider,
-          redirect_uri: redirectUrl,
-          client,
-          // only send state for new client login
-          state: oldClient ? undefined : this.state,
-        }),
-        headers: {
-          'content-type': 'application/json',
-        },
-      });
-
-      let { url } = await res.json();
+      let { url } = await this.fetchService
+        .fetch('/api/oauth/preflight', {
+          method: 'POST',
+          body: JSON.stringify({
+            provider,
+            redirect_uri: redirectUrl,
+            client,
+            // only send state for new client login
+            state: oldClient ? undefined : this.state,
+          }),
+          headers: {
+            'content-type': 'application/json',
+          },
+        })
+        .then(r => r.json());
 
       /** @deprecated old client compatibility */
       if (oldClient) {
@@ -186,11 +186,11 @@ export class AuthService extends Service {
     }
   }
 
-  async signInOauthToken(token: string, provider: string) {
+  async signInOauthToken(state: string, provider: string) {
     try {
       const res = await this.fetchService.fetch('/api/oauth/callback', {
         method: 'POST',
-        body: JSON.stringify({ token, state: this.state }),
+        body: JSON.stringify({ state, secret: this.state }),
         headers: {
           'content-type': 'application/json',
         },
@@ -206,11 +206,11 @@ export class AuthService extends Service {
     }
   }
 
-  async signInOauth(code: string, state: string, provider: string) {
+  async signInOauth(code: string | undefined, state: string, provider: string) {
     try {
       const res = await this.fetchService.fetch('/api/oauth/callback', {
         method: 'POST',
-        body: JSON.stringify({ code, state }),
+        body: JSON.stringify({ code, state, secret: this.state }),
         headers: {
           'content-type': 'application/json',
         },

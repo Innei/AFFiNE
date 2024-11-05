@@ -7,69 +7,60 @@ import {
   // eslint-disable-next-line @typescript-eslint/no-restricted-imports
   useNavigate,
 } from 'react-router-dom';
+import { z } from 'zod';
 
 import { AuthService } from '../../../modules/cloud';
 import { supportedClient } from './common';
 
-interface LoaderData {
-  state: string;
-  code: string;
-  provider: string;
+const LoaderData = z.object({
+  state: z.string(),
+  provider: z.string(),
+  code: z.string().optional(),
+});
+
+const ParsedState = z.object({
+  payload: LoaderData,
+  client: supportedClient,
+});
+
+type LoaderData = z.infer<typeof LoaderData>;
+type ParsedState = z.infer<typeof ParsedState>;
+
+async function parseState(url: string): Promise<ParsedState> {
+  const { code, state: stateStr } = Array.from(
+    new URL(url).searchParams.entries()
+  ).reduce((acc, [k, v]) => ((acc[k] = v), acc), {} as Record<string, string>);
+  if (!code || !stateStr) throw new Error('Invalid oauth callback parameters');
+  try {
+    const { state, client, provider } = JSON.parse(stateStr);
+    return ParsedState.parse({ payload: { state, code, provider }, client });
+  } catch {}
+  const {
+    token: state,
+    provider,
+    client,
+  } = await fetch('/api/oauth/exchangeToken', {
+    method: 'POST',
+    body: JSON.stringify({ code, state: stateStr }),
+    headers: { 'content-type': 'application/json' },
+  }).then(r => r.json());
+  // new client format
+  return ParsedState.parse({ payload: { state, provider }, client });
 }
 
-export const loader: LoaderFunction = async ({ request }) => {
-  const url = new URL(request.url);
-  const queries = url.searchParams;
-
-  {
-    // new client login flow
-    const token = queries.get('token');
-    const client = queries.get('client');
-    const provider = queries.get('provider');
-    if (token && client && provider) {
-      const authParams = new URLSearchParams();
-      authParams.set('method', 'oauth');
-      authParams.set('payload', JSON.stringify({ token, provider }));
-
-      return redirect(
-        `/open-app/url?url=${encodeURIComponent(`${client}://authentication?${authParams.toString()}`)}`
-      );
-    }
-  }
-
-  /** @deprecated */
-  const code = queries.get('code');
-  const stateStr = queries.get('state') ?? '{}';
-
+export const loader: LoaderFunction = async args => {
   try {
-    if (!code || !stateStr) {
-      return redirect('/sign-in?error=Invalid oauth callback parameters');
-    }
-
-    const { state, client, provider } = JSON.parse(stateStr);
-
-    const payload: LoaderData = {
-      state,
-      code,
-      provider,
-    };
-
-    if (!client || client === 'web') {
-      return payload;
-    }
-
-    const clientCheckResult = supportedClient.safeParse(client);
-    if (!clientCheckResult.success) {
-      return redirect('/sign-in?error=Invalid oauth callback parameters');
-    }
-
-    const authParams = new URLSearchParams();
-    authParams.set('method', 'oauth');
-    authParams.set('payload', JSON.stringify(payload));
-    authParams.set('server', location.origin);
+    const { payload, client } = await parseState(args.request.url);
+    if (!client || client === 'web') return payload;
 
     return redirect(
-      `/open-app/url?url=${encodeURIComponent(`${client}://authentication?${authParams.toString()}`)}`
+      `/open-app/url?url=${encodeURIComponent(
+        `${client}://authentication?${new URLSearchParams({
+          method: 'oauth',
+          payload: JSON.stringify(payload),
+          server: location.origin,
+        }).toString()}`
+      )}`
     );
   } catch {
     return redirect('/sign-in?error=Invalid oauth callback parameters');
@@ -79,18 +70,16 @@ export const loader: LoaderFunction = async ({ request }) => {
 export const Component = () => {
   const auth = useService(AuthService);
   const data = useLoaderData() as LoaderData;
+  const nav = useNavigate();
 
   // loader data from useLoaderData is not reactive, so that we can safely
   // assume the effect below is only triggered once
   const triggeredRef = useRef(false);
 
-  const nav = useNavigate();
-
   useEffect(() => {
-    if (triggeredRef.current) {
-      return;
-    }
+    if (triggeredRef.current) return;
     triggeredRef.current = true;
+
     auth
       .signInOauth(data.code, data.state, data.provider)
       .then(({ redirectUri }) => {

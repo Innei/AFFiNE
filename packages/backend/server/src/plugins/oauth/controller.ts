@@ -6,7 +6,6 @@ import {
   HttpStatus,
   Logger,
   Post,
-  Query,
   Req,
   Res,
 } from '@nestjs/common';
@@ -15,6 +14,7 @@ import type { Request, Response } from 'express';
 import { z } from 'zod';
 
 import {
+  Config,
   InvalidOauthCallbackState,
   MissingOauthQueryParameter,
   OauthAccountAlreadyConnected,
@@ -31,13 +31,6 @@ import { OAuthService } from './service';
 
 const LoginParams = z.object({
   provider: z.nativeEnum(OAuthProviderName),
-  client: z.enum([
-    'web',
-    'affine',
-    'affine-canary',
-    'affine-beta',
-    ...(AFFiNE.node.dev ? ['affine-dev'] : []),
-  ]),
   redirectUri: z.string().optional(),
 });
 
@@ -45,13 +38,23 @@ const LoginParams = z.object({
 @Controller('/oauth')
 export class OAuthLegacyController {
   private readonly logger = new Logger(OAuthLegacyController.name);
+  private readonly clientSchema: z.ZodEnum<any>;
 
   constructor(
+    config: Config,
     private readonly auth: AuthService,
     private readonly oauth: OAuthService,
     private readonly providerFactory: OAuthProviderFactory,
     private readonly url: URLHelper
-  ) {}
+  ) {
+    this.clientSchema = z.enum([
+      'web',
+      'affine',
+      'affine-canary',
+      'affine-beta',
+      ...(config.node.dev ? ['affine-dev'] : []),
+    ]);
+  }
 
   @Public()
   @Get('/login')
@@ -69,7 +72,7 @@ export class OAuthLegacyController {
       await this.auth.refreshCookies(res, session.sessionId);
     }
 
-    const params = LoginParams.safeParse({
+    const params = LoginParams.extend({ client: this.clientSchema }).safeParse({
       provider: provider?.toLowerCase(),
       redirectUri: this.url.safeLink(redirectUri),
       client,
@@ -126,8 +129,7 @@ export class OAuthController {
     private readonly oauth: OAuthService,
     private readonly user: UserService,
     private readonly providerFactory: OAuthProviderFactory,
-    private readonly db: PrismaClient,
-    private readonly url: URLHelper
+    private readonly db: PrismaClient
   ) {}
 
   @Public()
@@ -165,12 +167,11 @@ export class OAuthController {
   }
 
   @Public()
-  @Get('/redirect')
+  @Post('/exchangeToken')
   @HttpCode(HttpStatus.OK)
-  async redirect(
-    @Res() res: Response,
-    @Query('code') code: string,
-    @Query('state') oAuthToken: string
+  async exchangeToken(
+    @Body('code') code: string,
+    @Body('state') oAuthToken: string
   ) {
     if (!code) {
       throw new MissingOauthQueryParameter({ name: 'code' });
@@ -181,29 +182,25 @@ export class OAuthController {
 
     const oAuthState = await this.oauth.getOAuthState(oAuthToken);
 
-    if (oAuthState?.state) {
-      // redirect from new client, need exchange cookie by client state
-      // we only cache the code and access token in server side
-      const provider = this.providerFactory.get(oAuthState.provider);
-      if (!provider) {
-        throw new UnknownOauthProvider({
-          name: oAuthState.provider ?? 'unknown',
-        });
-      }
-      const token = await this.oauth.saveOAuthState({ ...oAuthState, code });
-      res.redirect(
-        this.url.link('/oauth/callback', {
-          token,
-          client: oAuthState.clientId,
-          provider: oAuthState.provider,
-        })
-      );
-    } else {
-      // compatible with old client
-      res.redirect(
-        this.url.link('/oauth/callback', { code, state: oAuthState })
-      );
+    if (!oAuthState || !oAuthState?.state) {
+      throw new InvalidOauthCallbackState();
     }
+
+    // for new client, need exchange cookie by client state
+    // we only cache the code and access token in server side
+    const provider = this.providerFactory.get(oAuthState.provider);
+    if (!provider) {
+      throw new UnknownOauthProvider({
+        name: oAuthState.provider ?? 'unknown',
+      });
+    }
+    const token = await this.oauth.saveOAuthState({ ...oAuthState, code });
+
+    return {
+      token,
+      provider: oAuthState.provider,
+      client: oAuthState.clientId,
+    };
   }
 
   @Public()
@@ -213,15 +210,16 @@ export class OAuthController {
     @Req() req: Request,
     @Res() res: Response,
     /** @deprecated */ @Body('code') code?: string,
-    @Body('state') oAuthStateStr?: string,
+    @Body('state') oAuthToken?: string,
     // new client will send token to exchange cookie
-    @Body('token') token?: string
+    @Body('secret') inAppState?: string
   ) {
-    if (token && oAuthStateStr) {
+    if (inAppState && oAuthToken) {
       // new method, need exchange cookie by client state
       // we only cache the code and access token in server side
-      const authState = await this.oauth.getOAuthState(token);
-      if (!authState || authState.state !== oAuthStateStr || !authState.code) {
+      const authState = await this.oauth.getOAuthState(oAuthToken);
+      if (!authState || authState.state !== inAppState || !authState.code) {
+        console.log('authState', authState, 'inAppState', inAppState);
         throw new OauthStateExpired();
       }
 
@@ -237,7 +235,9 @@ export class OAuthController {
         });
       }
 
-      const tokens = await provider.getToken(authState.code);
+      // NOTE: in web client, we don't need to exchange token
+      // and provide the auth code directly
+      const tokens = await provider.getToken(code || authState.code);
       const externAccount = await provider.getUser(tokens.accessToken);
       const user = await this.loginFromOauth(
         authState.provider,
@@ -256,37 +256,39 @@ export class OAuthController {
         throw new MissingOauthQueryParameter({ name: 'code' });
       }
 
-      if (!oAuthStateStr) {
+      if (!oAuthToken) {
         throw new MissingOauthQueryParameter({ name: 'state' });
       }
 
       if (
-        typeof oAuthStateStr !== 'string' ||
-        !this.oauth.isValidState(oAuthStateStr)
+        typeof oAuthToken !== 'string' ||
+        !this.oauth.isValidState(oAuthToken)
       ) {
         throw new InvalidOauthCallbackState();
       }
 
-      const state = await this.oauth.getOAuthState(oAuthStateStr);
+      const authState = await this.oauth.getOAuthState(oAuthToken);
 
-      if (!state) {
+      if (!authState) {
         throw new OauthStateExpired();
       }
 
-      if (!state.provider) {
+      if (!authState.provider) {
         throw new MissingOauthQueryParameter({ name: 'provider' });
       }
 
-      const provider = this.providerFactory.get(state.provider);
+      const provider = this.providerFactory.get(authState.provider);
 
       if (!provider) {
-        throw new UnknownOauthProvider({ name: state.provider ?? 'unknown' });
+        throw new UnknownOauthProvider({
+          name: authState.provider ?? 'unknown',
+        });
       }
 
       const tokens = await provider.getToken(code);
       const externAccount = await provider.getUser(tokens.accessToken);
       const user = await this.loginFromOauth(
-        state.provider,
+        authState.provider,
         externAccount,
         tokens
       );
@@ -295,7 +297,7 @@ export class OAuthController {
       res.send({
         id: user.id,
         /* @deprecated */
-        redirectUri: state.redirectUri,
+        redirectUri: authState.redirectUri,
       });
     }
   }
