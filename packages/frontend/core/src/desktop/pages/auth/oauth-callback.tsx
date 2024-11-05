@@ -32,9 +32,13 @@ async function parseState(url: string): Promise<ParsedState> {
   ).reduce((acc, [k, v]) => ((acc[k] = v), acc), {} as Record<string, string>);
   if (!code || !stateStr) throw new Error('Invalid oauth callback parameters');
   try {
+    /** @deprecated old client compatibility*/
+    // NOTE: in old client, state is a JSON string
+    // we check and passthrough the state to the client
     const { state, client, provider } = JSON.parse(stateStr);
     return ParsedState.parse({ payload: { state, code, provider }, client });
   } catch {}
+  // new client behavior
   const {
     token: state,
     provider,
@@ -44,13 +48,13 @@ async function parseState(url: string): Promise<ParsedState> {
     body: JSON.stringify({ code, state: stateStr }),
     headers: { 'content-type': 'application/json' },
   }).then(r => r.json());
-  // new client format
   return ParsedState.parse({ payload: { state, provider }, client });
 }
 
 export const loader: LoaderFunction = async args => {
   try {
     const { payload, client } = await parseState(args.request.url);
+    // sign in directly if it's web client
     if (!client || client === 'web') return payload;
 
     return redirect(
