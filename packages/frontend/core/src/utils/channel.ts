@@ -15,7 +15,7 @@ export const appSchemaUrl = z.custom<string>(
     try {
       return appSchemes.safeParse(new URL(url).protocol.replace(':', ''))
         .success;
-    } catch (e) {
+    } catch {
       return false;
     }
   },

@@ -56,7 +56,7 @@ export class OAuthLegacyController {
   @Public()
   @Get('/login')
   @HttpCode(HttpStatus.OK)
-  async preflight(
+  async legacyLogin(
     @Res() res: Response,
     @Session() session: Session | undefined,
     @Body('provider') provider?: string,
@@ -64,14 +64,14 @@ export class OAuthLegacyController {
     @Body('client') client?: string
   ) {
     // sign out first, web only
-    if (client === 'web' && session) {
+    if ((!!client || client === 'web') && session) {
       await this.auth.signOut(session.sessionId);
       await this.auth.refreshCookies(res, session.sessionId);
     }
 
     const params = LoginParams.safeParse({
       provider: provider?.toLowerCase(),
-      redirectUri,
+      redirectUri: this.url.safeLink(redirectUri),
       client,
     });
     if (params.error) {

@@ -60,25 +60,31 @@ export class URLHelper {
     return this.url(path, query).toString();
   }
 
-  safeRedirect(res: Response, to: string) {
+  safeLink(to?: string) {
     try {
-      const finalTo = new URL(decodeURIComponent(to), this.baseUrl);
+      if (to) {
+        const finalTo = new URL(decodeURIComponent(to), this.baseUrl);
 
-      for (const host of this.redirectAllowHosts) {
-        const hostURL = new URL(host);
-        if (
-          hostURL.origin === finalTo.origin &&
-          finalTo.pathname.startsWith(hostURL.pathname)
-        ) {
-          return res.redirect(finalTo.toString().replace(/\/$/, ''));
+        for (const host of this.redirectAllowHosts) {
+          const hostURL = new URL(host);
+          if (
+            hostURL.origin === finalTo.origin &&
+            finalTo.pathname.startsWith(hostURL.pathname)
+          ) {
+            return finalTo.toString().replace(/\/$/, '');
+          }
         }
       }
     } catch {
       // just ignore invalid url
     }
 
-    // redirect to home if the url is invalid
-    return res.redirect(this.home);
+    // return home url if the url is invalid
+    return this.home;
+  }
+
+  safeRedirect(res: Response, to: string) {
+    return res.redirect(this.safeLink(to));
   }
 
   verify(url: string | URL) {
