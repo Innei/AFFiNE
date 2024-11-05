@@ -1,3 +1,4 @@
+import { extractLinkSearchParams } from '@affine/core/utils/link';
 import { useService } from '@toeverything/infra';
 import { useEffect, useRef } from 'react';
 import {
@@ -27,9 +28,7 @@ type LoaderData = z.infer<typeof LoaderData>;
 type ParsedState = z.infer<typeof ParsedState>;
 
 async function parseState(url: string): Promise<ParsedState> {
-  const { code, state: stateStr } = Array.from(
-    new URL(url).searchParams.entries()
-  ).reduce((acc, [k, v]) => ((acc[k] = v), acc), {} as Record<string, string>);
+  const { code, state: stateStr } = extractLinkSearchParams(url);
   if (!code || !stateStr) throw new Error('Invalid oauth callback parameters');
   try {
     /** @deprecated old client compatibility*/
