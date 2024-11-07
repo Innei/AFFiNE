@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
 import { INestApplication } from '@nestjs/common';
+import { ExecutionContext } from 'ava';
 import request from 'supertest';
 
 import {
@@ -304,7 +305,14 @@ export function sse2array(eventSource: string) {
     block.split('\n').reduce(
       (prev, curr) => {
         const [key, ...values] = curr.split(': ');
-        return Object.assign(prev, { [key]: values.join(': ') });
+        const value = values.join(': ');
+        const finalValue = value ? value : '\n';
+        if (prev[key]) {
+          const prevValue = finalValue === '\n' ? prev[key] : prev[key] + '\n';
+          return Object.assign(prev, { [key]: prevValue + finalValue });
+        } else {
+          return Object.assign(prev, { [key]: finalValue });
+        }
       },
       {} as Record<string, string>
     )
@@ -513,8 +521,212 @@ export const WorkflowTestCases: WorkflowTestCase[] = [
   },
 ];
 
-export const TestAssets = {
+export const checkMDList = (text: string) => {
+  const lines = text.split('\n');
+  const listItemRegex = /^( {2})*(-|\u2010-\u2015|\*|\+)? .+$/;
+  let prevIndent = null;
+
+  for (const line of lines) {
+    if (line.trim() === '') continue;
+    if (!listItemRegex.test(line)) {
+      return false;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+    const currentIndent = line.match(/^( *)/)?.[0].length!;
+    if (Number.isNaN(currentIndent) || currentIndent % 2 !== 0) {
+      return false;
+    }
+
+    if (prevIndent !== null && currentIndent > 0) {
+      const indentDiff = currentIndent - prevIndent;
+      // allow 1 level of indentation difference
+      if (indentDiff > 2) {
+        return false;
+      }
+    }
+
+    if (line.trim().startsWith('-')) {
+      prevIndent = currentIndent;
+    }
+  }
+
+  return true;
+};
+
+export const checkUrl = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const TestAssets = {
   SSOT: `In [information science](https://en.wikipedia.org/wiki/Information_science) and [information technology](https://en.wikipedia.org/wiki/Information_technology), **single source of truth** (**SSOT**) architecture, or **single point of truth** (**SPOT**) architecture, for [information systems](https://en.wikipedia.org/wiki/Information_system) is the practice of structuring [information models](https://en.wikipedia.org/wiki/Information_model) and associated [data schemas](https://en.wikipedia.org/wiki/Database_schema) such that every [data element](https://en.wikipedia.org/wiki/Data_element) is [mastered](https://en.wikipedia.org/wiki/Golden_record_(informatics)) (or edited) in only one place, providing [data normalization to a canonical form](https://en.wikipedia.org/wiki/Canonical_form#Computing) (for example, in [database normalization](https://en.wikipedia.org/wiki/Database_normalization) or content [transclusion](https://en.wikipedia.org/wiki/Transclusion)).\n\nThere are several scenarios with respect to copies and updates:\n\n* The master data is never copied and instead only references to it are made; this means that all reads and updates go directly to the SSOT.\n* The master data is copied but the copies are only read and only the master data is updated; if requests to read data are only made on copies, this is an instance of [CQRS](https://en.wikipedia.org/wiki/CQRS).\n* The master data is copied and the copies are updated; this needs a reconciliation mechanism when there are concurrent updates.\n  * Updates on copies can be thrown out whenever a concurrent update is made on the master, so they are not considered fully committed until propagated to the master. (many blockchains work that way.)\n  * Concurrent updates are merged. (if an automatic merge fails, it could fall back on another strategy, which could be the previous strategy or something else like manual intervention, which most source version control systems do.)\n\nThe advantages of SSOT architectures include easier prevention of mistaken inconsistencies (such as a duplicate value/copy somewhere being forgotten), and greatly simplified [version control](https://en.wikipedia.org/wiki/Version_control). Without a SSOT, dealing with inconsistencies implies either complex and error-prone consensus algorithms, or using a simpler architecture that's liable to lose data in the face of inconsistency (the latter may seem unacceptable but it is sometimes a very good choice; it is how most blockchains operate: a transaction is actually final only if it was included in the next block that is mined).\n\nIdeally, SSOT systems provide data that are authentic (and [authenticatable](https://en.wikipedia.org/wiki/Authentication)), relevant, and [referable](https://en.wikipedia.org/wiki/Reference_(computer_science)).[[1]](https://en.wikipedia.org/wiki/Single_source_of_truth#cite_note-1)\n\nDeployment of an SSOT architecture is becoming increasingly important in enterprise settings where incorrectly linked duplicate or de-normalized data elements (a direct consequence of intentional or unintentional [denormalization](https://en.wikipedia.org/wiki/Denormalization) of any explicit data model) pose a risk for retrieval of outdated, and therefore incorrect, information. Common examples (i.e., example classes of implementation) are as follows:\n\n* In [electronic health records](https://en.wikipedia.org/wiki/Electronic_health_record) (EHRs), it is imperative to accurately validate patient identity against a single referential repository, which serves as the SSOT. Duplicate representations of data within the enterprise would be implemented by the use of [pointers](https://en.wikipedia.org/wiki/Pointer_(computer_programming)) rather than duplicate database tables, rows, or cells. This ensures that data updates to elements in the authoritative location are comprehensively distributed to all [federated database](https://en.wikipedia.org/wiki/Federated_database) constituencies in the larger overall [enterprise architecture](https://en.wikipedia.org/wiki/Enterprise_architecture). EHRs are an excellent class for exemplifying how SSOT architecture is both poignantly necessary and challenging to achieve: it is challenging because inter-organization [health information exchange](https://en.wikipedia.org/wiki/Health_information_exchange) is inherently a [cybersecurity](https://en.wikipedia.org/wiki/Computer_security) competence hurdle, and nonetheless it is necessary, to prevent [medical errors](https://en.wikipedia.org/wiki/Medical_error), to prevent the wasted costs of inefficiency (such as duplicated work or rework), and to make the [primary care](https://en.wikipedia.org/wiki/Primary_care) and [medical home](https://en.wikipedia.org/wiki/Medical_home) concepts feasible (to achieve competent [care transitions](https://en.wikipedia.org/wiki/Transitional_care)).\n* [Single-source publishing](https://en.wikipedia.org/wiki/Single-source_publishing) as a general principle or ideal in [content management](https://en.wikipedia.org/wiki/Content_management) relies on having SSOTs, via [transclusion](https://en.wikipedia.org/wiki/Transclusion) or (otherwise, at least) substitution. Substitution happens via [libraries of objects](https://en.wikipedia.org/wiki/Library_(computing)#Object_libraries) that can be propagated as static copies which are later refreshed when necessary (that is, when refreshing of the [copy-paste](https://en.wikipedia.org/wiki/Cut,_copy,_and_paste) or [import](https://en.wikipedia.org/wiki/Import_and_export_of_data) is triggered by a larger updating event). [Component content management systems](https://en.wikipedia.org/wiki/Component_content_management_system) are a class of [content management systems](https://en.wikipedia.org/wiki/Content_management_system) that aim to provide competence on this level.`,
   Code: `fn euclidean_distance(a: &Vec<f64>, b: &Vec<f64>) -> f64 {\na.iter().zip(b.iter()).map(|(x, y)| (*x - *y).powi(2)).sum::<f64>().sqrt()\n}`,
   TODO: 'The PDF exporting feature in edgeless is flawed, which is not supposed to support rendering content with infinite logical size. We should remove this feature entry to user, but the current "export blob in surface ref" feature should be migrated and kept (which is base on the edgelessToCanvas API, which makes sense for exporting a partial viewport area for the page)',
 };
+
+const assertNotWrappedInCodeBlock = (t: ExecutionContext, result: string) => {
+  t.assert(
+    !result.replaceAll('\n', '').trim().startsWith('```') &&
+      !result.replaceAll('\n', '').trim().endsWith('```'),
+    'should not wrap in code block'
+  );
+};
+
+export const ProviderActionTestCase = [
+  {
+    promptName: [
+      'Summary',
+      'Explain this',
+      'Write an article about this',
+      'Write a twitter about this',
+      'Write a poem about this',
+      'Write a blog post about this',
+      'Write outline',
+      'Change tone to',
+      'Improve writing for it',
+      'Improve grammar for it',
+      'Fix spelling for it',
+      'Create headings',
+      'Make it longer',
+      'Make it shorter',
+      'Continue writing',
+    ],
+    messages: [{ role: 'user' as const, content: TestAssets.SSOT }],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      t.assert(
+        result.toLowerCase().includes('single source of truth') ||
+          result.toLowerCase().includes('ssot'),
+        `should include original keyword: ${result}`
+      );
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: ['Brainstorm ideas about this', 'Brainstorm mindmap'],
+    messages: [{ role: 'user' as const, content: TestAssets.SSOT }],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      t.assert(checkMDList(result), 'should be a markdown list');
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: 'Expand mind map',
+    messages: [{ role: 'user' as const, content: '- Single source of truth' }],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      t.assert(checkMDList(result), 'should be a markdown list');
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: 'Find action items from it',
+    messages: [{ role: 'user' as const, content: TestAssets.TODO }],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      t.assert(checkMDList(result), 'should be a markdown list');
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: ['Explain this code', 'Check code error'],
+    messages: [{ role: 'user' as const, content: TestAssets.Code }],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      t.assert(
+        result.toLowerCase().includes('distance'),
+        'explain code result should include keyword'
+      );
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: 'Translate to',
+    messages: [
+      {
+        role: 'user' as const,
+        content: TestAssets.SSOT,
+        params: { language: 'Simplified Chinese' },
+      },
+    ],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      t.assert(
+        result.toLowerCase().includes('单一事实来源'),
+        'explain code result should include keyword'
+      );
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: ['Generate a caption', 'Explain this image'],
+    messages: [
+      {
+        role: 'user' as const,
+        content: '',
+        attachments: [
+          'https://cdn.affine.pro/copilot-test/Qgqy9qZT3VGIEuMIotJYoCCH.jpg',
+        ],
+      },
+    ],
+    verifier: (t: ExecutionContext, result: string) => {
+      assertNotWrappedInCodeBlock(t, result);
+      const content = result.toLowerCase();
+      t.assert(
+        content.includes('classroom') ||
+          content.includes('school') ||
+          content.includes('sky'),
+        'explain code result should include keyword'
+      );
+    },
+    type: 'text' as const,
+  },
+  {
+    promptName: [
+      'debug:action:fal-face-to-sticker',
+      'debug:action:fal-remove-bg',
+      'debug:action:fal-sd15',
+      'debug:action:fal-upscaler',
+    ],
+    messages: [
+      {
+        role: 'user' as const,
+        content: '',
+        attachments: [
+          'https://cdn.affine.pro/copilot-test/Zkas098lkjdf-908231.jpg',
+        ],
+      },
+    ],
+    verifier: (t: ExecutionContext, link: string) => {
+      t.truthy(checkUrl(link), 'should be a valid url');
+    },
+    type: 'image' as const,
+  },
+];
+
+export const ProviderWorkflowTestCase = [
+  {
+    name: 'brainstorm',
+    content: 'apple company',
+    verifier: (t: ExecutionContext, result: string) => {
+      t.assert(checkMDList(result), 'should be a markdown list');
+    },
+  },
+  {
+    name: 'presentation',
+    content: 'apple company',
+    verifier: (t: ExecutionContext, result: string) => {
+      for (const l of result.split('\n')) {
+        t.notThrows(() => {
+          JSON.parse(l.trim());
+        }, 'should be valid json');
+      }
+    },
+  },
+];

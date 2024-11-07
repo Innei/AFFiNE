@@ -154,7 +154,10 @@
       "path": "./tests/affine-mobile"
     },
     {
-      "path": "./tests/affine-cloud"
+      "path": "./tests/affine-cloud/cloud"
+    },
+    {
+      "path": "./tests/affine-cloud/copilot"
     },
     {
       "path": "./tests/affine-desktop"

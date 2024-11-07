@@ -2,7 +2,7 @@
   "name": "@affine-test/affine-cloud-copilot",
   "private": true,
   "scripts": {
-    "e2e": "yarn playwright test"
+    "test:e2e": "yarn playwright test"
   },
   "devDependencies": {
     "@affine-test/kit": "workspace:*",

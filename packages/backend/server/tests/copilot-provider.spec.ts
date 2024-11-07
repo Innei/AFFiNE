@@ -27,7 +27,11 @@ import {
   CopilotCheckJsonExecutor,
 } from '../src/plugins/copilot/workflow/executor';
 import { createTestingModule } from './utils';
-import { TestAssets } from './utils/copilot';
+import {
+  checkMDList,
+  ProviderActionTestCase,
+  ProviderWorkflowTestCase,
+} from './utils/copilot';
 
 type Tester = {
   auth: AuthService;
@@ -130,59 +134,6 @@ test.after(async t => {
   await t.context.module.close();
 });
 
-const assertNotWrappedInCodeBlock = (
-  t: ExecutionContext<Tester>,
-  result: string
-) => {
-  t.assert(
-    !result.replaceAll('\n', '').trim().startsWith('```') &&
-      !result.replaceAll('\n', '').trim().endsWith('```'),
-    'should not wrap in code block'
-  );
-};
-
-const checkMDList = (text: string) => {
-  const lines = text.split('\n');
-  const listItemRegex = /^( {2})*(-|\u2010-\u2015|\*|\+)? .+$/;
-  let prevIndent = null;
-
-  for (const line of lines) {
-    if (line.trim() === '') continue;
-    if (!listItemRegex.test(line)) {
-      return false;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-    const currentIndent = line.match(/^( *)/)?.[0].length!;
-    if (Number.isNaN(currentIndent) || currentIndent % 2 !== 0) {
-      return false;
-    }
-
-    if (prevIndent !== null && currentIndent > 0) {
-      const indentDiff = currentIndent - prevIndent;
-      // allow 1 level of indentation difference
-      if (indentDiff > 2) {
-        return false;
-      }
-    }
-
-    if (line.trim().startsWith('-')) {
-      prevIndent = currentIndent;
-    }
-  }
-
-  return true;
-};
-
-const checkUrl = (url: string) => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 const retry = async (
   action: string,
   t: ExecutionContext<Tester>,
@@ -264,138 +215,7 @@ test('should validate markdown list', t => {
 
 // ==================== action ====================
 
-const actions = [
-  {
-    promptName: [
-      'Summary',
-      'Explain this',
-      'Write an article about this',
-      'Write a twitter about this',
-      'Write a poem about this',
-      'Write a blog post about this',
-      'Write outline',
-      'Change tone to',
-      'Improve writing for it',
-      'Improve grammar for it',
-      'Fix spelling for it',
-      'Create headings',
-      'Make it longer',
-      'Make it shorter',
-      'Continue writing',
-    ],
-    messages: [{ role: 'user' as const, content: TestAssets.SSOT }],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      t.assert(
-        result.toLowerCase().includes('single source of truth'),
-        'should include original keyword'
-      );
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: ['Brainstorm ideas about this', 'Brainstorm mindmap'],
-    messages: [{ role: 'user' as const, content: TestAssets.SSOT }],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      t.assert(checkMDList(result), 'should be a markdown list');
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: 'Expand mind map',
-    messages: [{ role: 'user' as const, content: '- Single source of truth' }],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      t.assert(checkMDList(result), 'should be a markdown list');
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: 'Find action items from it',
-    messages: [{ role: 'user' as const, content: TestAssets.TODO }],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      t.assert(checkMDList(result), 'should be a markdown list');
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: ['Explain this code', 'Check code error'],
-    messages: [{ role: 'user' as const, content: TestAssets.Code }],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      t.assert(
-        result.toLowerCase().includes('distance'),
-        'explain code result should include keyword'
-      );
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: 'Translate to',
-    messages: [
-      {
-        role: 'user' as const,
-        content: TestAssets.SSOT,
-        params: { language: 'Simplified Chinese' },
-      },
-    ],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      t.assert(
-        result.toLowerCase().includes('单一事实来源'),
-        'explain code result should include keyword'
-      );
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: ['Generate a caption', 'Explain this image'],
-    messages: [
-      {
-        role: 'user' as const,
-        content: '',
-        attachments: [
-          'https://cdn.affine.pro/copilot-test/Qgqy9qZT3VGIEuMIotJYoCCH.jpg',
-        ],
-      },
-    ],
-    verifier: (t: ExecutionContext<Tester>, result: string) => {
-      assertNotWrappedInCodeBlock(t, result);
-      const content = result.toLowerCase();
-      t.assert(
-        content.includes('classroom') ||
-          content.includes('school') ||
-          content.includes('sky'),
-        'explain code result should include keyword'
-      );
-    },
-    type: 'text' as const,
-  },
-  {
-    promptName: [
-      'debug:action:fal-face-to-sticker',
-      'debug:action:fal-remove-bg',
-      'debug:action:fal-sd15',
-      'debug:action:fal-upscaler',
-    ],
-    messages: [
-      {
-        role: 'user' as const,
-        content: '',
-        attachments: [
-          'https://cdn.affine.pro/copilot-test/Zkas098lkjdf-908231.jpg',
-        ],
-      },
-    ],
-    verifier: (t: ExecutionContext<Tester>, link: string) => {
-      t.truthy(checkUrl(link), 'should be a valid url');
-    },
-    type: 'image' as const,
-  },
-];
-for (const { promptName, messages, verifier, type } of actions) {
+for (const { promptName, messages, verifier, type } of ProviderActionTestCase) {
   const prompts = Array.isArray(promptName) ? promptName : [promptName];
   for (const promptName of prompts) {
     test(
@@ -455,28 +275,7 @@ for (const { promptName, messages, verifier, type } of actions) {
 
 // ==================== workflow ====================
 
-const workflows = [
-  {
-    name: 'brainstorm',
-    content: 'apple company',
-    verifier: (t: ExecutionContext, result: string) => {
-      t.assert(checkMDList(result), 'should be a markdown list');
-    },
-  },
-  {
-    name: 'presentation',
-    content: 'apple company',
-    verifier: (t: ExecutionContext, result: string) => {
-      for (const l of result.split('\n')) {
-        t.notThrows(() => {
-          JSON.parse(l.trim());
-        }, 'should be valid json');
-      }
-    },
-  },
-];
-
-for (const { name, content, verifier } of workflows) {
+for (const { name, content, verifier } of ProviderWorkflowTestCase) {
   test(
     `should be able to run workflow: ${name}`,
     runIfCopilotConfigured,

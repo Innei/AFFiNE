@@ -154,18 +154,22 @@ export async function createRandomUser(): Promise<{
   } as any;
 }
 
-export async function createRandomAIUser(): Promise<{
+export async function createRandomAIUser(
+  provider?: string,
+  connector: typeof runPrisma = runPrisma
+): Promise<{
   name: string;
   email: string;
   password: string;
   id: string;
+  sessionId: string;
 }> {
   const user = {
     name: faker.internet.username(),
-    email: faker.internet.email().toLowerCase(),
+    email: faker.internet.email({ provider }).toLowerCase(),
     password: '123456',
   };
-  const result = await runPrisma(async client => {
+  const result = await connector(async client => {
     const freeFeatureId = await client.feature
       .findFirst({
         where: { feature: 'free_plan_v1' },
@@ -181,7 +185,7 @@ export async function createRandomAIUser(): Promise<{
       })
       .then(f => f!.id);
 
-    await client.user.create({
+    const { id: userId } = await client.user.create({
       data: {
         ...user,
         emailVerifiedAt: new Date(),
@@ -203,11 +207,23 @@ export async function createRandomAIUser(): Promise<{
       },
     });
 
-    return await client.user.findUnique({
-      where: {
-        email: user.email,
+    const { id: sessionId } = await client.session.create({ data: {} });
+    await client.userSession.create({
+      data: {
+        sessionId,
+        userId,
+        // half an hour
+        expiresAt: new Date(Date.now() + 60 * 30 * 1000),
       },
     });
+
+    return await client.user
+      .findUnique({
+        where: {
+          email: user.email,
+        },
+      })
+      .then(r => ({ ...r, sessionId }));
   });
   cloudUserSchema.parse(result);
   return {

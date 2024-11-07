@@ -505,6 +505,7 @@ jobs:
             changed:
               - 'packages/backend/server/src/plugins/copilot/**'
               - 'packages/backend/server/tests/copilot.*'
+              - 'tests/affine-cloud-copilot/**'
 
       - name: Setup Node.js
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.apifilter.outputs.changed == 'true' }}
@@ -526,7 +527,7 @@ jobs:
 
       - name: Run server tests
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.apifilter.outputs.changed == 'true' }}
-        run: yarn affine @affine/server test:copilot:coverage --forbid-only
+        run: yarn affine @affine/server test:copilot:spec:coverage --forbid-only
         env:
           CARGO_TARGET_DIR: '${{ github.workspace }}/target'
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
@@ -616,7 +617,7 @@ jobs:
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.e2efilter.outputs.changed == 'true' }}
         uses: ./.github/actions/copilot-test
         with:
-          script: yarn affine @affine-test/affine-cloud-copilot e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+          script: yarn affine @affine-test/affine-cloud-copilot test:e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
           openai-key: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           fal-key: ${{ secrets.COPILOT_FAL_API_KEY }}
 

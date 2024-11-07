@@ -19,18 +19,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@affine-test/affine-cloud-copilot@workspace:tests/affine-cloud-copilot":
+"@affine-test/affine-cloud-copilot@workspace:tests/affine-cloud/copilot":
   version: 0.0.0-use.local
-  resolution: "@affine-test/affine-cloud-copilot@workspace:tests/affine-cloud-copilot"
+  resolution: "@affine-test/affine-cloud-copilot@workspace:tests/affine-cloud/copilot"
   dependencies:
     "@affine-test/kit": "workspace:*"
     "@playwright/test": "npm:=1.49.1"
   languageName: unknown
   linkType: soft
 
-"@affine-test/affine-cloud@workspace:tests/affine-cloud":
+"@affine-test/affine-cloud@workspace:tests/affine-cloud/cloud":
   version: 0.0.0-use.local
-  resolution: "@affine-test/affine-cloud@workspace:tests/affine-cloud"
+  resolution: "@affine-test/affine-cloud@workspace:tests/affine-cloud/cloud"
   dependencies:
     "@affine-test/kit": "workspace:*"
     "@playwright/test": "npm:=1.49.1"

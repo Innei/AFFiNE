@@ -12,7 +12,8 @@
     "tools/*",
     "docs/reference",
     "tools/@types/*",
-    "tests/*"
+    "tests/*",
+    "tests/affine-cloud/*"
   ],
   "engines": {
     "node": "<21.0.0"

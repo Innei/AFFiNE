@@ -38,6 +38,16 @@ jobs:
       DISTRIBUTION: web
       DATABASE_URL: postgresql://affine:affine@localhost:5432/affine
       REDIS_SERVER_HOST: localhost
+    strategy:
+      fail-fast: false
+      matrix:
+        spec:
+          - {
+              name: e2e,
+              package: '@affine-test/affine-cloud-copilot',
+              type: e2e,
+            }
+          - { name: spec, package: '@affine/server', type: copilot:spec }
     services:
       postgres:
         image: postgres
@@ -78,12 +88,13 @@ jobs:
       - name: Prepare Server Test Environment
         uses: ./.github/actions/server-test-env
 
-      - name: Run server tests
-        run: yarn affine @affine/server test:copilot:coverage --forbid-only
+      - name: Run copilot api ${{ matrix.spec.name }} tests
+        run: yarn affine ${{ matrix.spec.package }} test:${{ matrix.spec.type }}:coverage --forbid-only
         env:
           CARGO_TARGET_DIR: '${{ github.workspace }}/target'
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           COPILOT_FAL_API_KEY: ${{ secrets.COPILOT_FAL_API_KEY }}
+          COPILOT_E2E_ENDPOINT: ${{ secrets.COPILOT_E2E_ENDPOINT }}
 
       - name: Upload server test coverage results
         uses: codecov/codecov-action@v5
@@ -144,7 +155,7 @@ jobs:
       - name: Run Copilot E2E Test ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         uses: ./.github/actions/copilot-test
         with:
-          script: yarn affine @affine-test/affine-cloud-copilot e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+          script: yarn affine @affine-test/affine-cloud-copilot test:e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
           openai-key: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           fal-key: ${{ secrets.COPILOT_FAL_API_KEY }}
 
