@@ -5,7 +5,8 @@ import request from 'supertest';
 
 import { AppModule } from '../../src/app.module';
 import { AuthService, CurrentUser } from '../../src/core/auth';
-import { createTestingApp, gql, internalSignIn } from '../utils';
+import { createTestingApp, internalSignIn } from '../utils';
+import { gql } from '../utils/common';
 
 const test = ava as TestFn<{
   app: INestApplication;

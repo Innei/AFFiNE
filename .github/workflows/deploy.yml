@@ -99,6 +99,9 @@ jobs:
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           COPILOT_FAL_API_KEY: ${{ secrets.COPILOT_FAL_API_KEY }}
           COPILOT_UNSPLASH_API_KEY: ${{ secrets.COPILOT_UNSPLASH_API_KEY }}
+          # used for slack notifications
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          RELEASE_SLACK_CHNNEL_ID: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
           METRICS_CUSTOMER_IO_TOKEN: ${{ secrets.METRICS_CUSTOMER_IO_TOKEN }}
           MAILER_SENDER: ${{ secrets.OAUTH_EMAIL_SENDER }}
           MAILER_USER: ${{ secrets.OAUTH_EMAIL_LOGIN }}

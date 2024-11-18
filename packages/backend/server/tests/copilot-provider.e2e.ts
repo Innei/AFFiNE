@@ -1,10 +1,10 @@
-import { randomUUID } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 
-import { createRandomAIUser } from '@affine-test/kit/utils/cloud';
+import { hash } from '@node-rs/argon2';
 import type { ExecutionContext, TestFn } from 'ava';
 import ava from 'ava';
+import { z } from 'zod';
 
-import { createWorkspace } from './utils';
 import {
   chatWithImages,
   chatWithText,
@@ -15,6 +15,7 @@ import {
   ProviderWorkflowTestCase,
   sse2array,
 } from './utils/copilot';
+import { createWorkspace } from './utils/workspace';
 
 type Tester = {
   app: any;
@@ -47,20 +48,14 @@ const runIfCopilotConfigured = test.macro(
   }
 );
 
-export const runPrisma = async <T>(
+const runPrisma = async <T>(
   cb: (
     prisma: InstanceType<
-      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-      typeof import('../../../../packages/backend/server/node_modules/@prisma/client').PrismaClient
+      typeof import('../node_modules/@prisma/client').PrismaClient
     >
   ) => Promise<T>
 ): Promise<T> => {
-  const {
-    PrismaClient,
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-  } = await import(
-    '../../../../packages/backend/server/node_modules/@prisma/client'
-  );
+  const { PrismaClient } = await import('../node_modules/@prisma/client');
   const client = new PrismaClient();
   await client.$connect();
   try {
@@ -70,14 +65,99 @@ export const runPrisma = async <T>(
   }
 };
 
+const cloudUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+});
+
+function randomName() {
+  return Array.from({ length: 10 }, () =>
+    String.fromCharCode(randomInt(65, 90))
+  )
+    .join('')
+    .toLowerCase();
+}
+
+async function createRandomAIUser(): Promise<{
+  name: string;
+  email: string;
+  password: string;
+  id: string;
+  sessionId: string;
+}> {
+  const name = randomName();
+  const email = `${name}@affine.fail`;
+  const user = { name, email, password: '123456' };
+  const result = await runPrisma(async client => {
+    const freeFeatureId = await client.feature
+      .findFirst({
+        where: { feature: 'free_plan_v1' },
+        select: { id: true },
+        orderBy: { version: 'desc' },
+      })
+      .then(f => f!.id);
+    const aiFeatureId = await client.feature
+      .findFirst({
+        where: { feature: 'unlimited_copilot' },
+        select: { id: true },
+        orderBy: { version: 'desc' },
+      })
+      .then(f => f!.id);
+
+    const { id: userId } = await client.user.create({
+      data: {
+        ...user,
+        emailVerifiedAt: new Date(),
+        password: await hash(user.password),
+        features: {
+          create: [
+            {
+              reason: 'created by test case',
+              activated: true,
+              featureId: freeFeatureId,
+            },
+            {
+              reason: 'created by test case',
+              activated: true,
+              featureId: aiFeatureId,
+            },
+          ],
+        },
+      },
+    });
+
+    const { id: sessionId } = await client.session.create({ data: {} });
+    await client.userSession.create({
+      data: {
+        sessionId,
+        userId,
+        // half an hour
+        expiresAt: new Date(Date.now() + 60 * 30 * 1000),
+      },
+    });
+
+    return await client.user
+      .findUnique({
+        where: {
+          email: user.email,
+        },
+      })
+      .then(r => ({ ...r, sessionId }));
+  });
+  cloudUserSchema.parse(result);
+  return {
+    ...result,
+    password: user.password,
+  } as any;
+}
+
 test.before(async t => {
   if (!isCopilotConfigured) return;
   const { endpoint } = e2eConfig;
 
-  const { email, sessionId: token } = await createRandomAIUser(
-    'affine.fail',
-    runPrisma
-  );
+  const { email, sessionId: token } = await createRandomAIUser();
   const app = { getHttpServer: () => endpoint } as any;
   const { id } = await createWorkspace(app, token);
 

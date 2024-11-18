@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "rootDir": ".",
+    "outDir": "../lib/tests",
+    "verbatimModuleSyntax": false,
+    "tsBuildInfoFile": "../lib/tests/.tsbuildinfo"
+  },
+  "include": [".", "utils"],
+  "exclude": [],
+  "ts-node": {
+    "esm": true,
+    "compilerOptions": {
+      "module": "ESNext",
+      "moduleResolution": "Node"
+    }
+  }
+}

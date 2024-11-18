@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
-import { gql } from './common';
+import { gqlEndpoint } from './common';
 
 export async function listBlobs(
   app: INestApplication,
@@ -9,7 +9,7 @@ export async function listBlobs(
   workspaceId: string
 ): Promise<string[]> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .send({
@@ -29,7 +29,7 @@ export async function getWorkspaceBlobsSize(
   workspaceId: string
 ): Promise<number> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .send({
       query: `
@@ -49,7 +49,7 @@ export async function collectAllBlobSizes(
   token: string
 ): Promise<number> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .send({
       query: `
@@ -66,6 +66,27 @@ export async function collectAllBlobSizes(
   return res.body.data.currentUser.quotaUsage.storageQuota;
 }
 
+export async function checkBlobSize(
+  app: INestApplication,
+  token: string,
+  workspaceId: string,
+  size: number
+): Promise<number> {
+  const res = await request(app.getHttpServer())
+    .post(gqlEndpoint)
+    .auth(token, { type: 'bearer' })
+    .send({
+      query: `query checkBlobSize($workspaceId: String!, $size: SafeInt!) {
+          checkBlobSize(workspaceId: $workspaceId, size: $size) {
+            size
+          }
+        }`,
+      variables: { workspaceId, size },
+    })
+    .expect(200);
+  return res.body.data.checkBlobSize.size;
+}
+
 export async function setBlob(
   app: INestApplication,
   token: string,
@@ -73,7 +94,7 @@ export async function setBlob(
   buffer: Buffer
 ): Promise<string> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .field(
