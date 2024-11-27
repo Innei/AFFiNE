@@ -271,6 +271,7 @@ export type ErrorDataUnion =
   | DocNotFoundDataType
   | InvalidEmailDataType
   | InvalidHistoryTimestampDataType
+  | InvalidLicenseUpdateParamsDataType
   | InvalidPasswordLengthDataType
   | InvalidRuntimeConfigTypeDataType
   | MemberNotFoundInSpaceDataType
@@ -287,6 +288,7 @@ export type ErrorDataUnion =
   | UnknownOauthProviderDataType
   | UnsupportedSubscriptionPlanDataType
   | VersionRejectedDataType
+  | WorkspaceMembersExceedLimitToDowngradeDataType
   | WrongSignInCredentialsDataType;
 
 export enum ErrorNames {
@@ -328,10 +330,15 @@ export enum ErrorNames {
   INVALID_EMAIL = 'INVALID_EMAIL',
   INVALID_EMAIL_TOKEN = 'INVALID_EMAIL_TOKEN',
   INVALID_HISTORY_TIMESTAMP = 'INVALID_HISTORY_TIMESTAMP',
+  INVALID_LICENSE_SESSION_ID = 'INVALID_LICENSE_SESSION_ID',
+  INVALID_LICENSE_TO_ACTIVATE = 'INVALID_LICENSE_TO_ACTIVATE',
+  INVALID_LICENSE_UPDATE_PARAMS = 'INVALID_LICENSE_UPDATE_PARAMS',
   INVALID_OAUTH_CALLBACK_STATE = 'INVALID_OAUTH_CALLBACK_STATE',
   INVALID_PASSWORD_LENGTH = 'INVALID_PASSWORD_LENGTH',
   INVALID_RUNTIME_CONFIG_TYPE = 'INVALID_RUNTIME_CONFIG_TYPE',
   INVALID_SUBSCRIPTION_PARAMETERS = 'INVALID_SUBSCRIPTION_PARAMETERS',
+  LICENSE_NOT_FOUND = 'LICENSE_NOT_FOUND',
+  LICENSE_REVEALED = 'LICENSE_REVEALED',
   LINK_EXPIRED = 'LINK_EXPIRED',
   MAILER_SERVICE_IS_NOT_CONFIGURED = 'MAILER_SERVICE_IS_NOT_CONFIGURED',
   MEMBER_NOT_FOUND_IN_SPACE = 'MEMBER_NOT_FOUND_IN_SPACE',
@@ -366,6 +373,8 @@ export enum ErrorNames {
   VERSION_REJECTED = 'VERSION_REJECTED',
   WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION = 'WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION',
   WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION = 'WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION',
+  WORKSPACE_LICENSE_ALREADY_EXISTS = 'WORKSPACE_LICENSE_ALREADY_EXISTS',
+  WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE = 'WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE',
   WRONG_SIGN_IN_CREDENTIALS = 'WRONG_SIGN_IN_CREDENTIALS',
   WRONG_SIGN_IN_METHOD = 'WRONG_SIGN_IN_METHOD',
 }
@@ -406,6 +415,11 @@ export interface InvalidEmailDataType {
 export interface InvalidHistoryTimestampDataType {
   __typename?: 'InvalidHistoryTimestampDataType';
   timestamp: Scalars['String']['output'];
+}
+
+export interface InvalidLicenseUpdateParamsDataType {
+  __typename?: 'InvalidLicenseUpdateParamsDataType';
+  reason: Scalars['String']['output'];
 }
 
 export interface InvalidPasswordLengthDataType {
@@ -586,6 +600,7 @@ export interface Mutation {
   deleteWorkspace: Scalars['Boolean']['output'];
   /** Create a chat session */
   forkCopilotSession: Scalars['String']['output'];
+  generateLicenseKey: Scalars['String']['output'];
   grantMember: Scalars['String']['output'];
   invite: Scalars['String']['output'];
   inviteBatch: Array<InviteResult>;
@@ -718,6 +733,10 @@ export interface MutationDeleteWorkspaceArgs {
 
 export interface MutationForkCopilotSessionArgs {
   options: ForkChatSessionInput;
+}
+
+export interface MutationGenerateLicenseKeyArgs {
+  sessionId: Scalars['String']['input'];
 }
 
 export interface MutationGrantMemberArgs {
@@ -1139,6 +1158,7 @@ export enum SubscriptionPlan {
   Free = 'Free',
   Pro = 'Pro',
   SelfHosted = 'SelfHosted',
+  SelfHostedTeam = 'SelfHostedTeam',
   Team = 'Team',
 }
 
@@ -1319,6 +1339,11 @@ export enum WorkspaceMemberStatus {
   NeedMoreSeatAndReview = 'NeedMoreSeatAndReview',
   Pending = 'Pending',
   UnderReview = 'UnderReview',
+}
+
+export interface WorkspaceMembersExceedLimitToDowngradeDataType {
+  __typename?: 'WorkspaceMembersExceedLimitToDowngradeDataType';
+  limit: Scalars['Int']['output'];
 }
 
 export interface WorkspacePage {

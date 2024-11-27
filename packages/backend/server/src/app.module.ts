@@ -37,6 +37,7 @@ import { SyncModule } from './core/sync';
 import { UserModule } from './core/user';
 import { WorkspaceModule } from './core/workspaces';
 import { REGISTERED_PLUGINS } from './plugins';
+import { LicenseModule } from './plugins/license';
 import { ENABLED_PLUGINS } from './plugins/registry';
 
 export const FunctionalityModules = [
@@ -170,7 +171,8 @@ export function buildAppModule() {
       GqlModule,
       StorageModule,
       ServerConfigModule,
-      WorkspaceModule
+      WorkspaceModule,
+      LicenseModule
     )
 
     // self hosted server only
@@ -181,7 +183,8 @@ export function buildAppModule() {
   ENABLED_PLUGINS.forEach(name => {
     const plugin = REGISTERED_PLUGINS.get(name);
     if (!plugin) {
-      throw new Error(`Unknown plugin ${name}`);
+      new Logger('AppBuilder').warn(`Unknown plugin ${name}`);
+      return;
     }
 
     factor.use(plugin);

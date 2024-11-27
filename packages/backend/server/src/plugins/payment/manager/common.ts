@@ -22,6 +22,7 @@ export interface Subscription {
   plan: string;
   recurring: string;
   variant: string | null;
+  quantity: number;
   start: Date;
   end: Date | null;
   trialStart: Date | null;
@@ -99,11 +100,13 @@ export abstract class SubscriptionManager {
   transformSubscription({
     lookupKey,
     stripeSubscription: subscription,
+    quantity,
   }: KnownStripeSubscription): Subscription {
     return {
       ...lookupKey,
       stripeScheduleId: subscription.schedule as string | null,
       stripeSubscriptionId: subscription.id,
+      quantity,
       status: subscription.status,
       start: new Date(subscription.current_period_start * 1000),
       end: new Date(subscription.current_period_end * 1000),
@@ -224,7 +227,7 @@ export abstract class SubscriptionManager {
 
   protected async getCouponFromPromotionCode(
     userFacingPromotionCode: string,
-    customer: UserStripeCustomer
+    customer?: UserStripeCustomer
   ) {
     const list = await this.stripe.promotionCodes.list({
       code: userFacingPromotionCode,
@@ -243,11 +246,20 @@ export abstract class SubscriptionManager {
     // code.coupon.applies_to.products.forEach()
 
     // check if the code is bound to a specific customer
-    return !code.customer ||
-      (typeof code.customer === 'string'
-        ? code.customer === customer.stripeCustomerId
-        : code.customer.id === customer.stripeCustomerId)
-      ? code.coupon.id
-      : null;
+    if (code.customer) {
+      if (!customer) {
+        return null;
+      }
+
+      return (
+        typeof code.customer === 'string'
+          ? code.customer === customer.stripeCustomerId
+          : code.customer.id === customer.stripeCustomerId
+      )
+        ? code.coupon.id
+        : null;
+    }
+
+    return code.coupon.id;
   }
 }

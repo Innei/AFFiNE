@@ -8,11 +8,13 @@ import { UserModule } from '../../core/user';
 import { Plugin } from '../registry';
 import { StripeWebhookController } from './controller';
 import { SubscriptionCronJobs } from './cron';
+import { LicenseController } from './license/controller';
 import {
+  SelfhostTeamSubscriptionManager,
   UserSubscriptionManager,
   WorkspaceSubscriptionManager,
 } from './manager';
-import { TeamQuotaOverride } from './quota';
+import { QuotaOverride } from './quota';
 import {
   SubscriptionResolver,
   UserSubscriptionResolver,
@@ -33,11 +35,12 @@ import { StripeWebhook } from './webhook';
     StripeWebhook,
     UserSubscriptionManager,
     WorkspaceSubscriptionManager,
+    SelfhostTeamSubscriptionManager,
     SubscriptionCronJobs,
     WorkspaceSubscriptionResolver,
-    TeamQuotaOverride,
+    QuotaOverride,
   ],
-  controllers: [StripeWebhookController],
+  controllers: [StripeWebhookController, LicenseController],
   requires: [
     'plugins.payment.stripe.keys.APIKey',
     'plugins.payment.stripe.keys.webhookKey',

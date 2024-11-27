@@ -334,4 +334,13 @@ export class MailService {
     });
     return this.sendMail({ to, subject: title, html });
   }
+
+  async sendLicenseGeneratedEmail(to: string, licenseKey: string) {
+    const html = emailTemplate({
+      title: 'Your license key for AFFiNE self-hosted workspace',
+      content: `Your license key is: <br><b>${licenseKey}</b>`,
+    });
+
+    return this.sendMail({ to, subject: 'Your AFFiNE license key', html });
+  }
 }

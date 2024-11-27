@@ -209,6 +209,8 @@ export class UserSubscriptionManager extends SubscriptionManager {
 
   async saveStripeSubscription(subscription: KnownStripeSubscription) {
     const { userId, lookupKey, stripeSubscription } = subscription;
+    this.assertUserIdExists(userId);
+
     // update features first, features modify are idempotent
     // so there is no need to skip if a subscription already exists.
     // TODO(@forehalo):
@@ -235,7 +237,7 @@ export class UserSubscriptionManager extends SubscriptionManager {
       ]),
       create: {
         userId,
-        ...subscriptionData,
+        ...omit(subscriptionData, 'quantity'),
       },
     });
 
@@ -261,6 +263,8 @@ export class UserSubscriptionManager extends SubscriptionManager {
     lookupKey,
     stripeSubscription,
   }: KnownStripeSubscription) {
+    this.assertUserIdExists(userId);
+
     const deleted = await this.db.subscription.deleteMany({
       where: {
         stripeSubscriptionId: stripeSubscription.id,
@@ -385,6 +389,7 @@ export class UserSubscriptionManager extends SubscriptionManager {
 
   async saveInvoice(knownInvoice: KnownStripeInvoice) {
     const { userId, lookupKey, stripeInvoice } = knownInvoice;
+    this.assertUserIdExists(userId);
 
     const invoiceData = await this.transformInvoice(knownInvoice);
 
@@ -427,6 +432,8 @@ export class UserSubscriptionManager extends SubscriptionManager {
   async saveLifetimeSubscription(
     knownInvoice: KnownStripeInvoice
   ): Promise<Subscription> {
+    this.assertUserIdExists(knownInvoice.userId);
+
     // cancel previous non-lifetime subscription
     const prevSubscription = await this.db.subscription.findUnique({
       where: {
@@ -492,6 +499,8 @@ export class UserSubscriptionManager extends SubscriptionManager {
   async saveOnetimePaymentSubscription(
     knownInvoice: KnownStripeInvoice
   ): Promise<Subscription> {
+    this.assertUserIdExists(knownInvoice.userId);
+
     // TODO(@forehalo): identify whether the invoice has already been redeemed.
     const { userId, lookupKey } = knownInvoice;
     const existingSubscription = await this.db.subscription.findUnique({
@@ -713,5 +722,13 @@ export class UserSubscriptionManager extends SubscriptionManager {
       aiSubscribed,
       onetime: false,
     };
+  }
+
+  private assertUserIdExists(
+    userId: string | undefined
+  ): asserts userId is string {
+    if (!userId) {
+      throw new Error('user should exists for stripe subscription or invoice.');
+    }
   }
 }

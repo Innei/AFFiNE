@@ -209,7 +209,7 @@ type EditorType {
   name: String!
 }
 
-union ErrorDataUnion = AlreadyInSpaceDataType | BlobNotFoundDataType | CopilotMessageNotFoundDataType | CopilotPromptNotFoundDataType | CopilotProviderSideErrorDataType | DocAccessDeniedDataType | DocHistoryNotFoundDataType | DocNotFoundDataType | InvalidEmailDataType | InvalidHistoryTimestampDataType | InvalidPasswordLengthDataType | InvalidRuntimeConfigTypeDataType | MemberNotFoundInSpaceDataType | MissingOauthQueryParameterDataType | NotInSpaceDataType | RuntimeConfigNotFoundDataType | SameSubscriptionRecurringDataType | SpaceAccessDeniedDataType | SpaceNotFoundDataType | SpaceOwnerNotFoundDataType | SubscriptionAlreadyExistsDataType | SubscriptionNotExistsDataType | SubscriptionPlanNotFoundDataType | UnknownOauthProviderDataType | UnsupportedSubscriptionPlanDataType | VersionRejectedDataType | WrongSignInCredentialsDataType
+union ErrorDataUnion = AlreadyInSpaceDataType | BlobNotFoundDataType | CopilotMessageNotFoundDataType | CopilotPromptNotFoundDataType | CopilotProviderSideErrorDataType | DocAccessDeniedDataType | DocHistoryNotFoundDataType | DocNotFoundDataType | InvalidEmailDataType | InvalidHistoryTimestampDataType | InvalidLicenseUpdateParamsDataType | InvalidPasswordLengthDataType | InvalidRuntimeConfigTypeDataType | MemberNotFoundInSpaceDataType | MissingOauthQueryParameterDataType | NotInSpaceDataType | RuntimeConfigNotFoundDataType | SameSubscriptionRecurringDataType | SpaceAccessDeniedDataType | SpaceNotFoundDataType | SpaceOwnerNotFoundDataType | SubscriptionAlreadyExistsDataType | SubscriptionNotExistsDataType | SubscriptionPlanNotFoundDataType | UnknownOauthProviderDataType | UnsupportedSubscriptionPlanDataType | VersionRejectedDataType | WorkspaceMembersExceedLimitToDowngradeDataType | WrongSignInCredentialsDataType
 
 enum ErrorNames {
   ACCESS_DENIED
@@ -250,10 +250,15 @@ enum ErrorNames {
   INVALID_EMAIL
   INVALID_EMAIL_TOKEN
   INVALID_HISTORY_TIMESTAMP
+  INVALID_LICENSE_SESSION_ID
+  INVALID_LICENSE_TO_ACTIVATE
+  INVALID_LICENSE_UPDATE_PARAMS
   INVALID_OAUTH_CALLBACK_STATE
   INVALID_PASSWORD_LENGTH
   INVALID_RUNTIME_CONFIG_TYPE
   INVALID_SUBSCRIPTION_PARAMETERS
+  LICENSE_NOT_FOUND
+  LICENSE_REVEALED
   LINK_EXPIRED
   MAILER_SERVICE_IS_NOT_CONFIGURED
   MEMBER_NOT_FOUND_IN_SPACE
@@ -288,6 +293,8 @@ enum ErrorNames {
   VERSION_REJECTED
   WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION
   WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION
+  WORKSPACE_LICENSE_ALREADY_EXISTS
+  WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE
   WRONG_SIGN_IN_CREDENTIALS
   WRONG_SIGN_IN_METHOD
 }
@@ -328,6 +335,10 @@ type InvalidEmailDataType {
 
 type InvalidHistoryTimestampDataType {
   timestamp: String!
+}
+
+type InvalidLicenseUpdateParamsDataType {
+  reason: String!
 }
 
 type InvalidPasswordLengthDataType {
@@ -444,6 +455,11 @@ The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](
 """
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
+type License {
+  installedAt: DateTime!
+  validatedAt: DateTime!
+}
+
 type LimitedUserType {
   """User email"""
   email: String!
@@ -482,6 +498,7 @@ type MissingOauthQueryParameterDataType {
 
 type Mutation {
   acceptInviteById(inviteId: String!, sendAcceptMail: Boolean, workspaceId: String!): Boolean!
+  activateLicense(license: String!, workspaceId: String!): License!
   addWorkspaceFeature(feature: FeatureType!, workspaceId: String!): Int!
   approveMember(userId: String!, workspaceId: String!): String!
   cancelSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, workspaceId: String): SubscriptionType!
@@ -515,6 +532,7 @@ type Mutation {
 
   """Create a new workspace"""
   createWorkspace(init: Upload): WorkspaceType!
+  deactivateLicense(workspaceId: String!): Boolean!
   deleteAccount: DeleteAccount!
   deleteBlob(hash: String @deprecated(reason: "use parameter [key]"), key: String, permanently: Boolean! = false, workspaceId: String!): Boolean!
 
@@ -524,6 +542,7 @@ type Mutation {
 
   """Create a chat session"""
   forkCopilotSession(options: ForkChatSessionInput!): String!
+  generateLicenseKey(sessionId: String!): String!
   grantMember(permission: Permission!, userId: String!, workspaceId: String!): String!
   invite(email: String!, permission: Permission @deprecated(reason: "never used"), sendInviteMail: Boolean, workspaceId: String!): String!
   inviteBatch(emails: [String!]!, sendInviteMail: Boolean, workspaceId: String!): [InviteResult!]!
@@ -797,6 +816,7 @@ enum SubscriptionPlan {
   Free
   Pro
   SelfHosted
+  SelfHostedTeam
   Team
 }
 
@@ -967,6 +987,10 @@ enum WorkspaceMemberStatus {
   UnderReview
 }
 
+type WorkspaceMembersExceedLimitToDowngradeDataType {
+  limit: Int!
+}
+
 type WorkspacePage {
   id: String!
   mode: PublicPageMode!
@@ -1014,6 +1038,9 @@ type WorkspaceType {
   """Get user invoice count"""
   invoiceCount: Int!
   invoices(skip: Int, take: Int = 8): [InvoiceType!]!
+
+  """The selfhost license of the workspace"""
+  license: License
 
   """member count of workspace"""
   memberCount: Int!
