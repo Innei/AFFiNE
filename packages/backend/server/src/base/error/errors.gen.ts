@@ -591,6 +591,56 @@ export class CaptchaVerificationFailed extends UserFriendlyError {
     super('bad_request', 'captcha_verification_failed', message);
   }
 }
+
+export class InvalidLicenseSessionId extends UserFriendlyError {
+  constructor(message?: string) {
+    super('invalid_input', 'invalid_license_session_id', message);
+  }
+}
+
+export class LicenseRevealed extends UserFriendlyError {
+  constructor(message?: string) {
+    super('action_forbidden', 'license_revealed', message);
+  }
+}
+
+export class WorkspaceLicenseAlreadyExists extends UserFriendlyError {
+  constructor(message?: string) {
+    super('action_forbidden', 'workspace_license_already_exists', message);
+  }
+}
+
+export class LicenseNotFound extends UserFriendlyError {
+  constructor(message?: string) {
+    super('resource_not_found', 'license_not_found', message);
+  }
+}
+
+export class InvalidLicenseToActivate extends UserFriendlyError {
+  constructor(message?: string) {
+    super('bad_request', 'invalid_license_to_activate', message);
+  }
+}
+@ObjectType()
+class InvalidLicenseUpdateParamsDataType {
+  @Field() reason!: string
+}
+
+export class InvalidLicenseUpdateParams extends UserFriendlyError {
+  constructor(args: InvalidLicenseUpdateParamsDataType, message?: string | ((args: InvalidLicenseUpdateParamsDataType) => string)) {
+    super('invalid_input', 'invalid_license_update_params', message, args);
+  }
+}
+@ObjectType()
+class WorkspaceMembersExceedLimitToDowngradeDataType {
+  @Field() limit!: number
+}
+
+export class WorkspaceMembersExceedLimitToDowngrade extends UserFriendlyError {
+  constructor(args: WorkspaceMembersExceedLimitToDowngradeDataType, message?: string | ((args: WorkspaceMembersExceedLimitToDowngradeDataType) => string)) {
+    super('bad_request', 'workspace_members_exceed_limit_to_downgrade', message, args);
+  }
+}
 export enum ErrorNames {
   INTERNAL_SERVER_ERROR,
   TOO_MANY_REQUEST,
@@ -669,7 +719,14 @@ export enum ErrorNames {
   MAILER_SERVICE_IS_NOT_CONFIGURED,
   CANNOT_DELETE_ALL_ADMIN_ACCOUNT,
   CANNOT_DELETE_OWN_ACCOUNT,
-  CAPTCHA_VERIFICATION_FAILED
+  CAPTCHA_VERIFICATION_FAILED,
+  INVALID_LICENSE_SESSION_ID,
+  LICENSE_REVEALED,
+  WORKSPACE_LICENSE_ALREADY_EXISTS,
+  LICENSE_NOT_FOUND,
+  INVALID_LICENSE_TO_ACTIVATE,
+  INVALID_LICENSE_UPDATE_PARAMS,
+  WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE
 }
 registerEnumType(ErrorNames, {
   name: 'ErrorNames'
@@ -678,5 +735,5 @@ registerEnumType(ErrorNames, {
 export const ErrorDataUnionType = createUnionType({
   name: 'ErrorDataUnion',
   types: () =>
-    [WrongSignInCredentialsDataType, UnknownOauthProviderDataType, MissingOauthQueryParameterDataType, InvalidEmailDataType, InvalidPasswordLengthDataType, SpaceNotFoundDataType, MemberNotFoundInSpaceDataType, NotInSpaceDataType, AlreadyInSpaceDataType, SpaceAccessDeniedDataType, SpaceOwnerNotFoundDataType, DocNotFoundDataType, DocAccessDeniedDataType, VersionRejectedDataType, InvalidHistoryTimestampDataType, DocHistoryNotFoundDataType, BlobNotFoundDataType, UnsupportedSubscriptionPlanDataType, SubscriptionAlreadyExistsDataType, SubscriptionNotExistsDataType, SameSubscriptionRecurringDataType, SubscriptionPlanNotFoundDataType, CopilotMessageNotFoundDataType, CopilotPromptNotFoundDataType, CopilotProviderSideErrorDataType, RuntimeConfigNotFoundDataType, InvalidRuntimeConfigTypeDataType] as const,
+    [WrongSignInCredentialsDataType, UnknownOauthProviderDataType, MissingOauthQueryParameterDataType, InvalidEmailDataType, InvalidPasswordLengthDataType, SpaceNotFoundDataType, MemberNotFoundInSpaceDataType, NotInSpaceDataType, AlreadyInSpaceDataType, SpaceAccessDeniedDataType, SpaceOwnerNotFoundDataType, DocNotFoundDataType, DocAccessDeniedDataType, VersionRejectedDataType, InvalidHistoryTimestampDataType, DocHistoryNotFoundDataType, BlobNotFoundDataType, UnsupportedSubscriptionPlanDataType, SubscriptionAlreadyExistsDataType, SubscriptionNotExistsDataType, SameSubscriptionRecurringDataType, SubscriptionPlanNotFoundDataType, CopilotMessageNotFoundDataType, CopilotPromptNotFoundDataType, CopilotProviderSideErrorDataType, RuntimeConfigNotFoundDataType, InvalidRuntimeConfigTypeDataType, InvalidLicenseUpdateParamsDataType, WorkspaceMembersExceedLimitToDowngradeDataType] as const,
 });

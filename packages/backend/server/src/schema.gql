@@ -250,10 +250,15 @@ enum ErrorNames {
   INVALID_EMAIL
   INVALID_EMAIL_TOKEN
   INVALID_HISTORY_TIMESTAMP
+  INVALID_LICENSE_SESSION_ID
+  INVALID_LICENSE_TO_ACTIVATE
+  INVALID_LICENSE_UPDATE_PARAMS
   INVALID_OAUTH_CALLBACK_STATE
   INVALID_PASSWORD_LENGTH
   INVALID_RUNTIME_CONFIG_TYPE
   INVALID_SUBSCRIPTION_PARAMETERS
+  LICENSE_NOT_FOUND
+  LICENSE_REVEALED
   LINK_EXPIRED
   MAILER_SERVICE_IS_NOT_CONFIGURED
   MEMBER_NOT_FOUND_IN_SPACE
@@ -288,6 +293,8 @@ enum ErrorNames {
   VERSION_REJECTED
   WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION
   WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION
+  WORKSPACE_LICENSE_ALREADY_EXISTS
+  WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE
   WRONG_SIGN_IN_CREDENTIALS
   WRONG_SIGN_IN_METHOD
 }
@@ -524,6 +531,7 @@ type Mutation {
 
   """Create a chat session"""
   forkCopilotSession(options: ForkChatSessionInput!): String!
+  generateLicenseKey(sessionId: String!): String!
   grantMember(permission: Permission!, userId: String!, workspaceId: String!): String!
   invite(email: String!, permission: Permission @deprecated(reason: "never used"), sendInviteMail: Boolean, workspaceId: String!): String!
   inviteBatch(emails: [String!]!, sendInviteMail: Boolean, workspaceId: String!): [InviteResult!]!
@@ -797,6 +805,7 @@ enum SubscriptionPlan {
   Free
   Pro
   SelfHosted
+  SelfHostedTeam
   Team
 }
 

@@ -569,15 +569,36 @@ model Invoice {
   @@index([targetId])
   @@map("invoices")
 }
+
+model License {
+  key         String    @id @map("key") @db.VarChar
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  revealedAt  DateTime? @map("revealed_at") @db.Timestamptz(3)
+  installedAt DateTime? @map("installed_at") @db.Timestamptz(3)
+  validateKey String?   @map("validate_key") @db.VarChar
+
+  @@map("licenses")
+}
+
+model InstalledLicense {
+  key         String    @id @map("key") @db.VarChar
+  workspaceId String    @unique @map("workspace_id") @db.VarChar
+  installedAt DateTime  @default(now()) @map("installed_at") @db.Timestamptz(3)
+  validateKey String?   @map("validate_key") @db.VarChar
+  validatedAt DateTime? @map("validated_at") @db.Timestamptz(3)
+
+  @@map("installed_licenses")
+}
+
 // Blob table only exists for fast non-data queries.
 // like, total size of blobs in a workspace, or blob list for sync service.
 // it should only be a map of metadata of blobs stored anywhere else
 model Blob {
-  workspaceId String   @map("workspace_id") @db.VarChar
-  key         String   @db.VarChar
-  size        Int      @db.Integer
-  mime        String   @db.VarChar
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  workspaceId String    @map("workspace_id") @db.VarChar
+  key         String    @db.VarChar
+  size        Int       @db.Integer
+  mime        String    @db.VarChar
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

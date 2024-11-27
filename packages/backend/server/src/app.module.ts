@@ -37,6 +37,7 @@ import { SyncModule } from './core/sync';
 import { UserModule } from './core/user';
 import { WorkspaceModule } from './core/workspaces';
 import { REGISTERED_PLUGINS } from './plugins';
+import { LicenseModule } from './plugins/license';
 import { ENABLED_PLUGINS } from './plugins/registry';
 
 export const FunctionalityModules = [
@@ -174,7 +175,7 @@ export function buildAppModule() {
     )
 
     // self hosted server only
-    .useIf(config => config.isSelfhosted, SelfhostModule)
+    .useIf(config => config.isSelfhosted, SelfhostModule, LicenseModule)
     .useIf(config => config.flavor.renderer, DocRendererModule);
 
   // plugin modules

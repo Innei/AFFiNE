@@ -128,7 +128,7 @@ export class WorkspaceSubscriptionManager extends SubscriptionManager {
   }
 
   async saveStripeSubscription(subscription: KnownStripeSubscription) {
-    const { lookupKey, quantity, stripeSubscription } = subscription;
+    const { lookupKey, stripeSubscription } = subscription;
 
     const workspaceId = stripeSubscription.metadata.workspaceId;
 
@@ -138,31 +138,30 @@ export class WorkspaceSubscriptionManager extends SubscriptionManager {
       );
     }
 
+    const subscriptionData = this.transformSubscription(subscription);
+
     this.event.emit('workspace.subscription.activated', {
       workspaceId,
       plan: lookupKey.plan,
       recurring: lookupKey.recurring,
-      quantity,
+      quantity: subscriptionData.quantity,
     });
-
-    const subscriptionData = this.transformSubscription(subscription);
 
     return this.db.subscription.upsert({
       where: {
         stripeSubscriptionId: stripeSubscription.id,
       },
       update: {
-        quantity,
         ...pick(subscriptionData, [
           'status',
           'stripeScheduleId',
           'nextBillAt',
           'canceledAt',
+          'quantity',
         ]),
       },
       create: {
         targetId: workspaceId,
-        quantity,
         ...subscriptionData,
       },
     });

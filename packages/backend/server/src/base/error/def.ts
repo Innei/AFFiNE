@@ -593,4 +593,38 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'bad_request',
     message: 'Captcha verification failed.',
   },
+
+  // license errors
+  invalid_license_session_id: {
+    type: 'invalid_input',
+    message: 'Invalid session id to generate license key.',
+  },
+  license_revealed: {
+    type: 'action_forbidden',
+    message:
+      'License key has been revealed. Please check your mail box of the one provided during checkout.',
+  },
+  workspace_license_already_exists: {
+    type: 'action_forbidden',
+    message: 'Workspace already has a license applied.',
+  },
+  license_not_found: {
+    type: 'resource_not_found',
+    message: 'License not found.',
+  },
+  invalid_license_to_activate: {
+    type: 'bad_request',
+    message: 'Invalid license to activate.',
+  },
+  invalid_license_update_params: {
+    type: 'invalid_input',
+    args: { reason: 'string' },
+    message: ({ reason }) => `Invalid license update params. ${reason}`,
+  },
+  workspace_members_exceed_limit_to_downgrade: {
+    type: 'bad_request',
+    args: { limit: 'number' },
+    message: ({ limit }) =>
+      `You cannot downgrade the workspace from team workspace because there are more than ${limit} members that are currently active.`,
+  },
 } satisfies Record<string, UserFriendlyErrorOptions>;

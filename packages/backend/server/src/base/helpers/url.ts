@@ -46,6 +46,24 @@ export class URLHelper {
     return new URLSearchParams(query).toString();
   }
 
+  addSimpleQuery(
+    url: string,
+    key: string,
+    value: string | number | boolean,
+    escape = true
+  ) {
+    const urlObj = new URL(url);
+    if (escape) {
+      urlObj.searchParams.set(key, encodeURIComponent(value));
+      return urlObj.toString();
+    } else {
+      const query =
+        (urlObj.search ? urlObj.search + '&' : '?') + `${key}=${value}`;
+
+      return urlObj.origin + urlObj.pathname + query;
+    }
+  }
+
   url(path: string, query: Record<string, any> = {}) {
     const url = new URL(path, this.origin);
 
