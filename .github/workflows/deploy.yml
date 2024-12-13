@@ -101,7 +101,7 @@ jobs:
           COPILOT_UNSPLASH_API_KEY: ${{ secrets.COPILOT_UNSPLASH_API_KEY }}
           # used for slack notifications
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          RELEASE_SLACK_CHNNEL_ID: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+          RELEASE_SLACK_CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
           METRICS_CUSTOMER_IO_TOKEN: ${{ secrets.METRICS_CUSTOMER_IO_TOKEN }}
           MAILER_SENDER: ${{ secrets.OAUTH_EMAIL_SENDER }}
           MAILER_USER: ${{ secrets.OAUTH_EMAIL_LOGIN }}
@@ -164,7 +164,7 @@ jobs:
         if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         run: node ./tools/changelog/index.js
         env:
-          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           DEPLOYED_URL: ${{ steps.set_info.outputs.deployed_url }}
           PREV_VERSION: ${{ needs.output-prev-version.outputs.prev }}
@@ -180,7 +180,7 @@ jobs:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
-            channel: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+            channel: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
             text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Backend deploy failed `${{ github.event.inputs.flavor }}`>"
             blocks:
               - type: section
@@ -195,7 +195,7 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           method: chat.postMessage
           payload: |
-            channel: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+            channel: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
             text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|Backend deploy cancelled `${{ github.event.inputs.flavor }}`>"
             blocks:
               - type: section

@@ -179,7 +179,7 @@ jobs:
         if: ${{ always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         run: node ./tools/copilot-result/index.js
         env:
-          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           BRANCH_SHA: ${{ github.sha }}
           BRANCH_NAME: ${{ github.ref }}
@@ -189,7 +189,7 @@ jobs:
         if: ${{ always() && contains(needs.*.result, 'failure') }}
         run: node ./tools/copilot-result/index.js
         env:
-          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           BRANCH_SHA: ${{ github.sha }}
           BRANCH_NAME: ${{ github.ref }}
@@ -199,7 +199,7 @@ jobs:
         if: ${{ always() && contains(needs.*.result, 'cancelled') && !contains(needs.*.result, 'failure') }}
         run: node ./tools/copilot-result/index.js
         env:
-          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHNNEL_ID }}
+          CHANNEL_ID: ${{ secrets.RELEASE_SLACK_CHANNEL_ID }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           BRANCH_SHA: ${{ github.sha }}
           BRANCH_NAME: ${{ github.ref }}
