@@ -504,8 +504,8 @@ jobs:
           filters: |
             changed:
               - 'packages/backend/server/src/plugins/copilot/**'
-              - 'packages/backend/server/tests/copilot.*'
-              - 'tests/affine-cloud-copilot/**'
+              - 'packages/backend/server/tests/copilot*'
+              - 'tests/affine-cloud/copilot/**'
 
       - name: Setup Node.js
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.apifilter.outputs.changed == 'true' }}
@@ -596,7 +596,7 @@ jobs:
             changed:
               - 'packages/frontend/core/src/blocksuite/presets/ai/**'
               - 'packages/frontend/core/src/components/blocksuite/block-suite-editor/ai/**'
-              - 'tests/affine-cloud-copilot/**'
+              - 'tests/affine-cloud/copilot/**'
 
       - name: Setup Node.js
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.e2efilter.outputs.changed == 'true' }}
