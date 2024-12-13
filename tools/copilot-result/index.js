@@ -2,8 +2,16 @@ import { WebClient } from '@slack/web-api';
 
 import { render } from './markdown.js';
 
-const { CHANNEL_ID, SLACK_BOT_TOKEN, COPILOT_RESULT, BRANCH_SHA, BRANCH_NAME } =
-  process.env;
+const {
+  CHANNEL_ID,
+  SLACK_BOT_TOKEN,
+  COPILOT_RESULT,
+  BRANCH_SHA,
+  BRANCH_NAME,
+  GITHUB_SERVER_URL,
+  GITHUB_REPOSITORY,
+  GITHUB_RUN_ID,
+} = process.env;
 
 const { ok } = await new WebClient(SLACK_BOT_TOKEN).chat.postMessage({
   channel: CHANNEL_ID,
@@ -11,7 +19,8 @@ const { ok } = await new WebClient(SLACK_BOT_TOKEN).chat.postMessage({
   blocks: render(
     `# AFFiNE Copilot Test ${COPILOT_RESULT}
 
-- [${BRANCH_NAME?.replace('refs/heads/', '') || BRANCH_SHA}](https://github.com/toeverything/AFFiNE/commit/${BRANCH_SHA})
+- Branch: [${BRANCH_NAME?.replace('refs/heads/', '') || BRANCH_SHA}](https://github.com/toeverything/AFFiNE/commit/${BRANCH_SHA})
+- Job: [${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})
 `
   ),
 });
