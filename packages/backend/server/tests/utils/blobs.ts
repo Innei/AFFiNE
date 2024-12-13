@@ -66,27 +66,6 @@ export async function collectAllBlobSizes(
   return res.body.data.currentUser.quotaUsage.storageQuota;
 }
 
-export async function checkBlobSize(
-  app: INestApplication,
-  token: string,
-  workspaceId: string,
-  size: number
-): Promise<number> {
-  const res = await request(app.getHttpServer())
-    .post(gqlEndpoint)
-    .auth(token, { type: 'bearer' })
-    .send({
-      query: `query checkBlobSize($workspaceId: String!, $size: SafeInt!) {
-          checkBlobSize(workspaceId: $workspaceId, size: $size) {
-            size
-          }
-        }`,
-      variables: { workspaceId, size },
-    })
-    .expect(200);
-  return res.body.data.checkBlobSize.size;
-}
-
 export async function setBlob(
   app: INestApplication,
   token: string,
