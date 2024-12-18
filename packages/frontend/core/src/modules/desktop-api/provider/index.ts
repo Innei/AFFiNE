@@ -1,5 +1,5 @@
-import type { AppInfo } from '@affine/electron/preload/electron-api';
 import type {
+  AppInfo,
   ClientEvents,
   ClientHandler,
   SharedStorage,

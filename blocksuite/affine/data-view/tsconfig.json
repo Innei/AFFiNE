@@ -1,21 +1,17 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src/",
-    "outDir": "./dist/",
-    "noEmit": false,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["./src"],
   "references": [
-    {
-      "path": "../components"
-    },
-    {
-      "path": "../shared"
-    },
-    {
-      "path": "../../framework"
-    }
+    { "path": "../components" },
+    { "path": "../shared" },
+    { "path": "../../framework/block-std" },
+    { "path": "../../framework/global" },
+    { "path": "../../framework/store" }
   ]
 }

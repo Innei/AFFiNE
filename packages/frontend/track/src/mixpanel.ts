@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { DebugLogger } from '@affine/debug';
 import type { OverridedMixpanel } from 'mixpanel-browser';
 import mixpanelBrowser from 'mixpanel-browser';

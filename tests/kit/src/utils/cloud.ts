@@ -54,7 +54,7 @@ export const runPrisma = async <T>(
   cb: (
     prisma: InstanceType<
       // oxlint-disable-next-line @typescript-eslint/consistent-type-imports
-      typeof import('../../../packages/backend/server/node_modules/@prisma/client').PrismaClient
+      typeof import('../../../../packages/backend/server/node_modules/@prisma/client').PrismaClient
     >
   ) => Promise<T>
 ): Promise<T> => {
@@ -62,7 +62,7 @@ export const runPrisma = async <T>(
     PrismaClient,
     // oxlint-disable-next-line @typescript-eslint/consistent-type-imports
   } = await import(
-    '../../../packages/backend/server/node_modules/@prisma/client'
+    '../../../../packages/backend/server/node_modules/@prisma/client'
   );
   const client = new PrismaClient({
     datasourceUrl:

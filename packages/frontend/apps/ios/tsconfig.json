@@ -1,16 +1,17 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.web.json",
   "compilerOptions": {
-    "composite": true,
-    "outDir": "lib",
-    "moduleResolution": "Bundler",
-    "types": ["affine__env"],
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["./src"],
   "references": [
+    { "path": "../../component" },
     { "path": "../../core" },
-    { "path": "../../native" },
-    { "path": "../../../common/nbstore" }
+    { "path": "../../i18n" },
+    { "path": "../../../../blocksuite/affine/all" },
+    { "path": "../../../common/infra" },
+    { "path": "../../native" }
   ]
 }

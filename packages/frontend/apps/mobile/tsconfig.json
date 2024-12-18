@@ -1,12 +1,15 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.web.json",
   "compilerOptions": {
-    "composite": true,
-    "outDir": "lib",
-    "moduleResolution": "Bundler",
-    "types": ["affine__env"],
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["./src"],
-  "references": [{ "path": "../../core" }]
+  "references": [
+    { "path": "../../component" },
+    { "path": "../../core" },
+    { "path": "../../i18n" },
+    { "path": "../../../../blocksuite/affine/all" }
+  ]
 }

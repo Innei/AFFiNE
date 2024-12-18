@@ -47,7 +47,7 @@ export class CaptchaService {
       body: formData,
       method: 'POST',
     });
-    const outcome = await result.json();
+    const outcome: any = await result.json();
 
     return (
       !!outcome.success &&

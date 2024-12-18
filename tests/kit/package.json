@@ -4,12 +4,13 @@
   "type": "module",
   "version": "0.19.0",
   "exports": {
-    "./electron": "./electron.ts",
-    "./playwright": "./playwright.ts",
-    "./utils/*": "./utils/*.ts",
-    "./e2e-enhance/*": "./e2e-enhance/*.ts"
+    "./electron": "./src/electron.ts",
+    "./mobile": "./src/mobile.ts",
+    "./playwright": "./src/playwright.ts",
+    "./utils/*": "./src/utils/*.ts"
   },
   "devDependencies": {
+    "@affine-tools/utils": "workspace:*",
     "@node-rs/argon2": "^2.0.2",
     "@playwright/test": "=1.49.1",
     "express": "^4.21.2",

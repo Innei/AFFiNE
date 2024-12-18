@@ -2,8 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "noEmit": true,
-    "composite": false,
+    "outDir": "./dist",
     "paths": {
       "@blocks/*": ["../blocks/src/*"],
       "@inline/*": ["../framework/inline/src/*"],
@@ -11,5 +10,14 @@
       "@playground/*": ["../playground/*"]
     }
   },
-  "include": ["**.spec.ts", "**.test.ts", "**/**.ts"]
+  "include": ["**.spec.ts", "**.test.ts", "**/**.ts"],
+  "exclude": ["dist"],
+  "references": [
+    { "path": "../affine/components" },
+    { "path": "../affine/model" },
+    { "path": "../affine/shared" },
+    { "path": "../framework/block-std" },
+    { "path": "../framework/global" },
+    { "path": "../presets" }
+  ]
 }

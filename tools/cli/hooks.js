@@ -4,7 +4,6 @@ const service = create({
   experimentalSpecifierResolution: 'node',
   esm: true,
   transpileOnly: true,
-  swc: true,
 });
 
 register(service);

@@ -23,7 +23,6 @@ const readFileAsBase64 = (file: File) =>
   });
 const convertFormData = async (formData: FormData) => {
   const newFormData = [];
-  // @ts-expect-error FormData.entries
   for (const pair of formData.entries()) {
     const [key, value] = pair;
     if (value instanceof File) {
@@ -47,7 +46,7 @@ const convertBody = async (body: unknown, contentType: string) => {
     if (body instanceof ReadableStream) {
       const reader = body.getReader();
       const chunks = [];
-      // eslint-disable-next-line no-constant-condition
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -129,7 +128,6 @@ export function configureFetchProvider(framework: Framework) {
       console.time(tag);
       try {
         const { body } = request;
-        // @ts-expect-error Headers.entries
         const optionHeaders = Object.fromEntries(request.headers.entries());
         const {
           data: requestData,

@@ -67,6 +67,7 @@
     "update-shadcn": "shadcn-ui add -p src/components/ui"
   },
   "exports": {
-    "./*": "./src/*"
+    "./*": "./src/*.ts",
+    "./components/ui/*": "./src/components/ui/*.tsx"
   }
 }

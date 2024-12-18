@@ -10,6 +10,15 @@
   },
   "description": "AFFiNE Desktop App",
   "homepage": "https://github.com/toeverything/AFFiNE",
+  "exports": {
+    "./helper/exposed": "./src/helper/exposed.ts",
+    "./main/exposed": "./src/main/exposed.ts",
+    "./preload/electron-api": "./src/preload/electron-api.ts",
+    "./preload/shared-storage": "./src/preload/shared-storage.ts",
+    "./main/shared-state-schema": "./src/main/shared-state-schema.ts",
+    "./main/updater/event": "./src/main/updater/event.ts",
+    "./main/windows-manager": "./src/main/windows-manager/index.ts"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "cross-env DEV_SERVER_URL=http://localhost:8080 node ./scripts/dev.ts",

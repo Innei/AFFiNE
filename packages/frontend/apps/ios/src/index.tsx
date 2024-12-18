@@ -50,7 +50,7 @@ function main() {
 }
 
 function mountApp() {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  // oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
   const root = document.getElementById('app')!;
   createRoot(root).render(
     <StrictMode>

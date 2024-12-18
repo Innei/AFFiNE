@@ -2,7 +2,6 @@ import { ArrowRightSmallIcon } from '@blocksuite/icons/rc';
 import clsx from 'clsx';
 import { useMemo, useState } from 'react';
 import type { Location } from 'react-router-dom';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { useLocation, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 

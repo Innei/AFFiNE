@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
-import { join, resolve } from 'node:path';
 
+import { Package } from '@affine-tools/utils/workspace';
 import { expect, type Page } from '@playwright/test';
 import fs from 'fs-extra';
 import type { ElectronApplication } from 'playwright';
@@ -9,8 +9,7 @@ import { _electron as electron } from 'playwright';
 import { test as base, testResultDir } from './playwright';
 import { removeWithRetry } from './utils/utils';
 
-const projectRoot = join(__dirname, '..', '..');
-const electronRoot = join(projectRoot, 'packages/frontend/apps/electron');
+const electronRoot = new Package('@affine/electron').path;
 
 function generateUUID() {
   return crypto.randomUUID();
@@ -122,23 +121,23 @@ export const test = base.extend<{
       },
     });
   },
-  // eslint-disable-next-line no-empty-pattern
+  // oxlint-disable-next-line no-empty-pattern
   electronApp: async ({}, use) => {
     try {
       // a random id to avoid conflicts between tests
       const id = generateUUID();
-      const dist = resolve(electronRoot, 'dist');
-      const clonedDist = resolve(electronRoot, 'e2e-dist-' + id);
+      const dist = electronRoot.join('dist').value;
+      const clonedDist = electronRoot.join('e2e-dist-' + id).value;
       await fs.copy(dist, clonedDist);
       const packageJson = await fs.readJSON(
-        resolve(electronRoot, 'package.json')
+        electronRoot.join('package.json').value
       );
       // overwrite the app name
       packageJson.name = 'affine-test-' + id;
       // overwrite the path to the main script
       packageJson.main = './main.js';
       // write to the cloned dist
-      await fs.writeJSON(resolve(clonedDist, 'package.json'), packageJson);
+      await fs.writeJSON(clonedDist + '/package.json', packageJson);
 
       const env: Record<string, string> = {};
       for (const [key, value] of Object.entries(process.env)) {

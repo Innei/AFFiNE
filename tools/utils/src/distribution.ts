@@ -1,5 +1,3 @@
-import type { BUILD_CONFIG_TYPE } from '@affine/env/global';
-
 import { PackageList, type PackageName } from './workspace.gen';
 
 export const PackageToDistribution = new Map<

@@ -4,9 +4,9 @@ import { Cli } from 'clipanion';
 import { BuildCommand } from './build';
 import { BundleCommand } from './bundle';
 import { CleanCommand } from './clean';
-import { CodegenCommand } from './codegen';
 import type { CliContext } from './context';
 import { DevCommand } from './dev';
+import { InitCommand } from './init';
 import { RunCommand } from './run';
 
 const cli = new Cli<CliContext>({
@@ -18,7 +18,7 @@ const cli = new Cli<CliContext>({
 });
 
 cli.register(RunCommand);
-cli.register(CodegenCommand);
+cli.register(InitCommand);
 cli.register(CleanCommand);
 cli.register(BuildCommand);
 cli.register(DevCommand);

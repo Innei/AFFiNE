@@ -1,17 +1,17 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../tsconfig.web.json",
   "compilerOptions": {
-    "composite": true,
-    "outDir": "lib",
-    "moduleResolution": "Bundler",
-    "types": ["affine__env"],
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // dist is kept for webpack output
+    "outDir": "./lib",
+    "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo"
   },
   "include": ["./src"],
   "references": [
+    { "path": "../../component" },
     { "path": "../../core" },
-    {
-      "path": "../../electron-api"
-    }
+    { "path": "../../electron-api" },
+    { "path": "../../i18n" },
+    { "path": "../../../../tools/utils" }
   ]
 }

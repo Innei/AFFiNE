@@ -1,6 +1,4 @@
-import { resolve } from 'node:path';
-
-import { rootDir, test } from '@affine-test/kit/playwright';
+import { ProjectRoot, test } from '@affine-test/kit/playwright';
 import { openHomePage } from '@affine-test/kit/utils/load-page';
 import {
   clickNewPageButton,
@@ -29,7 +27,7 @@ test('should create a page with a local first avatar and remove it', async ({
   await page.getByTestId('current-workspace-label').click();
   await page
     .getByTestId('upload-avatar')
-    .setInputFiles(resolve(rootDir, 'tests', 'fixtures', 'blue.png'));
+    .setInputFiles(ProjectRoot.join('tests', 'fixtures', 'blue.png').value);
   await page.mouse.click(0, 0);
   await page.getByTestId('workspace-name').click();
   await page

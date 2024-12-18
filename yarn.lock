@@ -81,6 +81,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@affine-test/kit@workspace:tests/kit"
   dependencies:
+    "@affine-tools/utils": "workspace:*"
     "@node-rs/argon2": "npm:^2.0.2"
     "@playwright/test": "npm:=1.49.1"
     express: "npm:^4.21.2"
@@ -115,6 +116,7 @@ __metadata:
     cssnano: "npm:^7.0.6"
     html-webpack-plugin: "npm:^5.6.3"
     inquirer: "npm:^12.3.0"
+    jsonc-parser: "npm:^3.3.1"
     lodash-es: "npm:^4.17.21"
     mime-types: "npm:^2.1.35"
     mini-css-extract-plugin: "npm:^2.9.2"
@@ -455,6 +457,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@affine/electron-api@workspace:packages/frontend/electron-api"
   dependencies:
+    "@affine/electron": "workspace:*"
     async-call-rpc: "npm:^6.4.2"
   languageName: unknown
   linkType: soft
@@ -482,7 +485,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@affine/electron@workspace:packages/frontend/apps/electron":
+"@affine/electron@workspace:*, @affine/electron@workspace:packages/frontend/apps/electron":
   version: 0.0.0-use.local
   resolution: "@affine/electron@workspace:packages/frontend/apps/electron"
   dependencies:
@@ -652,7 +655,6 @@ __metadata:
     "@swc/core": "npm:^1.10.1"
     "@taplo/cli": "npm:^0.7.0"
     "@toeverything/infra": "workspace:*"
-    "@types/affine__env": "workspace:*"
     "@types/eslint": "npm:^9.6.1"
     "@types/node": "npm:^20.17.10"
     "@typescript-eslint/parser": "npm:^8.18.0"
@@ -3976,6 +3978,7 @@ __metadata:
   dependencies:
     "@blocksuite/affine-components": "workspace:*"
     "@blocksuite/affine-model": "workspace:*"
+    "@blocksuite/affine-shared": "workspace:*"
     "@blocksuite/block-std": "workspace:*"
     "@blocksuite/global": "workspace:*"
     "@blocksuite/presets": "workspace:*"
@@ -14082,7 +14085,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/affine__env@workspace:*, @types/affine__env@workspace:tools/@types/env":
+"@types/affine__env@workspace:tools/@types/env":
   version: 0.0.0-use.local
   resolution: "@types/affine__env@workspace:tools/@types/env"
   dependencies:
@@ -14180,6 +14183,12 @@ __metadata:
   checksum: 10/7324497b6cc34c963c44d3f8516c67a83b749ab4f18defd9418b231b071af7ee8f0a0f345a52b204e867de80f684cabb21158512e1eaecbcebbabed1d1e357a3
   languageName: node
   linkType: hard
+
+"@types/build-config@workspace:tools/@types/build-config":
+  version: 0.0.0-use.local
+  resolution: "@types/build-config@workspace:tools/@types/build-config"
+  languageName: unknown
+  linkType: soft
 
 "@types/busboy@npm:^1.5.0":
   version: 1.5.4
@@ -24683,6 +24692,13 @@ __metadata:
   bin:
     json5: lib/cli.js
   checksum: 10/1db67b853ff0de3534085d630691d3247de53a2ed1390ba0ddff681ea43e9b3e30ecbdb65c5e9aab49435e44059c23dbd6fee8ee619419ba37465bb0dd7135da
+  languageName: node
+  linkType: hard
+
+"jsonc-parser@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "jsonc-parser@npm:3.3.1"
+  checksum: 10/9b0dc391f20b47378f843ef1e877e73ec652a5bdc3c5fa1f36af0f119a55091d147a86c1ee86a232296f55c929bba174538c2bf0312610e0817a22de131cc3f4
   languageName: node
   linkType: hard
 

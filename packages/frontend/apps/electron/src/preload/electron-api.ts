@@ -1,4 +1,6 @@
 // Please add modules to `external` in `rollupOptions` to avoid wrong bundling.
+import type { MessagePort } from 'node:worker_threads';
+
 import type { EventBasedChannel } from 'async-call-rpc';
 import { AsyncCall } from 'async-call-rpc';
 import { ipcRenderer } from 'electron';
@@ -135,12 +137,13 @@ const helperPort = new Promise<MessagePort>(resolve =>
 const createMessagePortChannel = (port: MessagePort): EventBasedChannel => {
   return {
     on(listener) {
-      port.onmessage = e => {
+      const listen = (e: MessageEvent) => {
         listener(e.data);
       };
+      port.on('message', listen);
       port.start();
       return () => {
-        port.onmessage = null;
+        port.off('message', listen);
         try {
           port.close();
         } catch (err) {
@@ -246,7 +249,13 @@ export const events = {
   ...helperAPIs.events,
 };
 
-// Create MessagePort that can be used by web workers
+/**
+ * Create MessagePort that can be used by web workers
+ *
+ * !!!
+ * SHOULD ONLY BE USED IN RENDERER PROCESS
+ * !!!
+ */
 export function requestWebWorkerPort() {
   const ch = new MessageChannel();
 
@@ -274,6 +283,7 @@ export function requestWebWorkerPort() {
   const portId = crypto.randomUUID();
 
   setTimeout(() => {
+    // @ts-expect-error this function should only be evaluated in the renderer process
     window.postMessage(
       {
         type: 'electron:request-api-port',

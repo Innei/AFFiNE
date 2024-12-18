@@ -1,13 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
-    "composite": true,
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["./src"],
-  "references": [
-    { "path": "../../packages/common/env" },
-    { "path": "../utils" }
-  ]
+  "references": [{ "path": "../utils" }]
 }

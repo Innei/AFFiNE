@@ -60,7 +60,6 @@
     "@swc/core": "^1.10.1",
     "@taplo/cli": "^0.7.0",
     "@toeverything/infra": "workspace:*",
-    "@types/affine__env": "workspace:*",
     "@types/eslint": "^9.6.1",
     "@types/node": "^20.17.10",
     "@typescript-eslint/parser": "^8.18.0",

@@ -1,7 +1,6 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-import type { BUILD_CONFIG_TYPE } from '@affine/env/global';
 import { Path, ProjectRoot } from '@affine-tools/utils/path';
 import { Repository } from '@napi-rs/simple-git';
 import HTMLPlugin from 'html-webpack-plugin';

@@ -1,20 +1,18 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src/",
-    "outDir": "./dist/",
-    "noEmit": false
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
   "include": ["./src"],
   "references": [
-    {
-      "path": "../../framework"
-    },
-    {
-      "path": "../../blocks"
-    },
-    {
-      "path": "../../presets"
-    }
+    { "path": "../../framework/block-std" },
+    { "path": "../../blocks" },
+    { "path": "../../framework/global" },
+    { "path": "../../framework/inline" },
+    { "path": "../../presets" },
+    { "path": "../../framework/store" },
+    { "path": "../../framework/sync" }
   ]
 }

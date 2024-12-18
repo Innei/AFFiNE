@@ -1,15 +1,10 @@
 {
-  "extends": "../../../tsconfig.json",
+  "extends": "../../../tsconfig.web.json",
   "compilerOptions": {
-    "outDir": "lib",
-    "typeRoots": ["../../../node_modules", "../../../node_modules/@types"],
-    "types": ["affine__env"]
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.json"],
-  "exclude": ["node_modules"],
-  "references": [
-    {
-      "path": "../../common/debug"
-    }
-  ]
+  "include": ["./src"],
+  "references": [{ "path": "../../common/debug" }]
 }

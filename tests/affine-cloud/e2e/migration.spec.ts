@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 
-import { test } from '@affine-test/kit/playwright';
+import { Path, test } from '@affine-test/kit/playwright';
 import {
   createRandomUser,
   deleteUser,
@@ -72,7 +71,10 @@ test.skip('migration', async ({ page, browser }) => {
     await runPrisma(async client => {
       const sqls = (
         await readFile(
-          resolve(__dirname, 'fixtures', '0.9.0-canary.9-snapshots.sql'),
+          Path.dir(import.meta.url).join(
+            'fixtures',
+            '0.9.0-canary.9-snapshots.sql'
+          ).value,
           'utf-8'
         )
       )

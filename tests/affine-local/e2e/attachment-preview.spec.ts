@@ -1,6 +1,4 @@
-import path from 'node:path';
-
-import { test } from '@affine-test/kit/playwright';
+import { Path, test } from '@affine-test/kit/playwright';
 import { openHomePage } from '@affine-test/kit/utils/load-page';
 import {
   clickNewPageButton,
@@ -15,6 +13,8 @@ import {
 } from '@affine-test/kit/utils/setting';
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
+
+const fixturesDir = Path.dir(import.meta.url).join('../../fixtures');
 
 async function clickPeekViewControl(page: Page, n = 0) {
   await page.getByTestId('peek-view-control').nth(n).click();
@@ -66,10 +66,7 @@ test('attachment preview should be shown', async ({ page }) => {
   await title.click();
   await page.keyboard.press('Enter');
 
-  await insertAttachment(
-    page,
-    path.join(__dirname, '../../fixtures/lorem-ipsum.pdf')
-  );
+  await insertAttachment(page, fixturesDir.join('lorem-ipsum.pdf').value);
 
   await page.locator('affine-attachment').first().dblclick();
 
@@ -107,10 +104,7 @@ test('attachment preview can be expanded', async ({ page }) => {
   await title.click();
   await page.keyboard.press('Enter');
 
-  await insertAttachment(
-    page,
-    path.join(__dirname, '../../fixtures/lorem-ipsum.pdf')
-  );
+  await insertAttachment(page, fixturesDir.join('lorem-ipsum.pdf').value);
 
   await page.locator('affine-attachment').first().dblclick();
 
@@ -161,10 +155,7 @@ test('should preview PDF in embed view', async ({ page }) => {
 
   await page.keyboard.press('Enter');
 
-  await insertAttachment(
-    page,
-    path.join(__dirname, '../../fixtures/lorem-ipsum.pdf')
-  );
+  await insertAttachment(page, fixturesDir.join('lorem-ipsum.pdf').value);
 
   const attachment = page.locator('affine-attachment');
   await attachment.hover();
@@ -271,10 +262,7 @@ test('should sync name in pdf embed view', async ({ page }) => {
   await title.click();
   await page.keyboard.press('Enter');
 
-  await insertAttachment(
-    page,
-    path.join(__dirname, '../../fixtures/lorem-ipsum.pdf')
-  );
+  await insertAttachment(page, fixturesDir.join('lorem-ipsum.pdf').value);
 
   const attachment = page.locator('affine-attachment');
   await attachment.hover();

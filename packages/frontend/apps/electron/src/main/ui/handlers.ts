@@ -106,7 +106,7 @@ export const uiHandlers = {
       link =
         'https://api.fxtwitter.com/status/' + /\/status\/(.*)/.exec(link)?.[1];
       try {
-        const { tweet } = await fetch(link).then(res => res.json());
+        const { tweet } = (await fetch(link).then(res => res.json())) as any;
         return {
           title: tweet.author.name,
           icon: tweet.author.avatar_url,

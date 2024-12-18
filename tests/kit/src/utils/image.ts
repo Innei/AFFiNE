@@ -1,5 +1,4 @@
-import { join } from 'node:path';
-
+import { Path } from '@affine-tools/utils/path';
 import type { Page } from '@playwright/test';
 
 export async function importImage(page: Page, pathInFixtures: string) {
@@ -17,7 +16,9 @@ export async function importImage(page: Page, pathInFixtures: string) {
   await page.keyboard.press('Enter');
   await (
     await fileChooser
-  ).setFiles(join(__dirname, '../../fixtures', pathInFixtures));
+  ).setFiles(
+    Path.dir(import.meta.url).join('../../../fixtures', pathInFixtures).value
+  );
   // TODO(@catsjuice): wait for image to be loaded more reliably
   await page.waitForTimeout(1000);
 }

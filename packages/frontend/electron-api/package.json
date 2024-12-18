@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "async-call-rpc": "^6.4.2"
+  },
+  "devDependencies": {
+    "@affine/electron": "workspace:*"
   }
 }

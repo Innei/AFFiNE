@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* oxlint-disable @typescript-eslint/no-non-null-assertion */
 import { Entity } from '@toeverything/infra';
 
 import type { DesktopApiProvider } from '../provider';

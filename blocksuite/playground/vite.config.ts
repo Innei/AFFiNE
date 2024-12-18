@@ -29,6 +29,8 @@ export function sourcemapExclude(): Plugin {
           map: { mappings: '' },
         };
       }
+
+      return undefined;
     },
   };
 }
@@ -157,10 +159,10 @@ const clearSiteDataPlugin = () =>
   }) as Plugin;
 
 // https://vitejs.dev/config/
-export default ({ mode }) => {
+export default defineConfig(({ mode }) => {
   process.env = { ...process.env, ...loadEnv(mode, __dirname, '') };
 
-  return defineConfig({
+  return {
     envDir: __dirname,
     define: {
       'import.meta.env.PLAYGROUND_SERVER': JSON.stringify(
@@ -200,7 +202,10 @@ export default ({ mode }) => {
         cache: false,
         maxParallelFileOps: Math.max(1, cpus().length - 1),
         onwarn(warning, defaultHandler) {
-          if (['EVAL', 'SOURCEMAP_ERROR'].includes(warning.code)) {
+          if (
+            warning.code &&
+            ['EVAL', 'SOURCEMAP_ERROR'].includes(warning.code)
+          ) {
             return;
           }
 
@@ -252,10 +257,11 @@ export default ({ mode }) => {
                 }
                 return group;
               }
+              return undefined;
             }
           },
         },
       },
     },
-  });
-};
+  };
+});

@@ -1,7 +1,9 @@
 {
   "name": "@affine/debug",
   "private": true,
-  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "debug": "^4.4.0"
   },

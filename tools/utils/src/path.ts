@@ -1,5 +1,5 @@
 import { existsSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export class Path {
@@ -19,6 +19,10 @@ export class Path {
 
   join(...paths: string[]) {
     return new Path(join(this.path, ...paths));
+  }
+
+  parent() {
+    return this.join('..');
   }
 
   toString() {
@@ -43,6 +47,10 @@ export class Path {
 
   toFileUrl() {
     return pathToFileURL(this.path);
+  }
+
+  relative(to: string) {
+    return relative(this.value, to);
   }
 }
 

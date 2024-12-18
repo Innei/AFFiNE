@@ -429,6 +429,7 @@ export const PackageList = [
     workspaceDependencies: [
       'blocksuite/affine/components',
       'blocksuite/affine/model',
+      'blocksuite/affine/shared',
       'blocksuite/framework/block-std',
       'blocksuite/framework/global',
       'blocksuite/presets',
@@ -582,7 +583,7 @@ export const PackageList = [
   {
     location: 'packages/frontend/electron-api',
     name: '@affine/electron-api',
-    workspaceDependencies: [],
+    workspaceDependencies: ['packages/frontend/apps/electron'],
   },
   {
     location: 'packages/frontend/graphql',
@@ -642,6 +643,11 @@ export const PackageList = [
   {
     location: 'tests/kit',
     name: '@affine-test/kit',
+    workspaceDependencies: ['tools/utils'],
+  },
+  {
+    location: 'tools/@types/build-config',
+    name: '@types/build-config',
     workspaceDependencies: [],
   },
   {
@@ -750,6 +756,7 @@ export type PackageName =
   | '@affine-test/affine-local'
   | '@affine-test/affine-mobile'
   | '@affine-test/kit'
+  | '@types/build-config'
   | '@types/affine__env'
   | '@affine/changelog'
   | '@affine-tools/cli'

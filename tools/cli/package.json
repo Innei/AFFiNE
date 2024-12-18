@@ -28,6 +28,7 @@
     "cssnano": "^7.0.6",
     "html-webpack-plugin": "^5.6.3",
     "inquirer": "^12.3.0",
+    "jsonc-parser": "^3.3.1",
     "lodash-es": "^4.17.21",
     "mime-types": "^2.1.35",
     "mini-css-extract-plugin": "^2.9.2",

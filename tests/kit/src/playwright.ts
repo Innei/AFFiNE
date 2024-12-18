@@ -1,25 +1,17 @@
-import { ok } from 'node:assert';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import path, { resolve } from 'node:path';
+import path from 'node:path';
 import process from 'node:process';
 
+import { Path, ProjectRoot } from '@affine-tools/utils/path';
 import type { BrowserContext } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
 
-export const rootDir = resolve(__dirname, '..', '..');
-// assert that the rootDir is the root of the project
-ok(
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require(resolve(rootDir, 'package.json')).name.toLowerCase() ===
-    '@affine/monorepo'
-);
-
-export const testResultDir = resolve(rootDir, 'test-results');
-
+export { Path, ProjectRoot };
+export const testResultDir = ProjectRoot.join('test-results').value;
 export const istanbulTempDir = process.env.ISTANBUL_TEMP_DIR
   ? path.resolve(process.env.ISTANBUL_TEMP_DIR)
-  : path.join(rootDir, '.nyc_output');
+  : ProjectRoot.join('.nyc_output').value;
 
 function generateUUID() {
   return crypto.randomUUID();
