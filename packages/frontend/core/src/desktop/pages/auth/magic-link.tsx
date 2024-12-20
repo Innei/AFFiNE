@@ -9,7 +9,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 
-import { AuthService, isBackendError } from '../../../modules/cloud';
+import { AuthService } from '../../../modules/cloud';
 import { supportedClient } from './common';
 
 interface LoaderData {
@@ -80,15 +80,11 @@ export const Component = () => {
         });
       })
       .catch(err => {
-        if (
-          err instanceof Error &&
-          isBackendError(err) &&
-          UserFriendlyError.fromAnyError(err).name ===
-            ErrorNames.UNSUPPORTED_CLIENT_VERSION
-        ) {
-          const { action } = UserFriendlyError.fromAnyError(err).args;
+        const userFriendlyError = UserFriendlyError.fromAnyError(err);
+        if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
+          const { action } = userFriendlyError.args;
           nav(
-            `/sign-in?error=${encodeURIComponent(err.message)}&action=${encodeURIComponent(action as string)}`
+            `/sign-in?error=${encodeURIComponent(userFriendlyError.message)}&action=${encodeURIComponent(action as string)}`
           );
           return;
         }

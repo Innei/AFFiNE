@@ -9,7 +9,6 @@ import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hoo
 import {
   AuthService,
   CaptchaService,
-  isBackendError,
   ServerService,
 } from '@affine/core/modules/cloud';
 import type { AuthSessionStatus } from '@affine/core/modules/cloud/entities/session';
@@ -92,15 +91,11 @@ export const SignInWithPasswordStep = ({
       });
     } catch (err) {
       console.error(err);
-      if (
-        err instanceof Error &&
-        isBackendError(err) &&
-        UserFriendlyError.fromAnyError(err).name ===
-          ErrorNames.UNSUPPORTED_CLIENT_VERSION
-      ) {
-        const { action } = UserFriendlyError.fromAnyError(err).args;
+      const userFriendlyError = UserFriendlyError.fromAnyError(err);
+      if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
+        const { action } = userFriendlyError.args;
         nav(
-          `/sign-in?error=${encodeURIComponent(err.message)}&action=${encodeURIComponent(action as string)}`
+          `/sign-in?error=${encodeURIComponent(userFriendlyError.message)}&action=${encodeURIComponent(action as string)}`
         );
         return;
       }
