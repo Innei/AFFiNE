@@ -1617,5 +1617,10 @@
   "com.affine.payment.sync-paused.member.storage.description": "This workspace has exceeded its storage limit and synchronization has been paused. Please contact your workspace owner to either reduce storage usage or upgrade the plan to resume syncing.",
   "com.affine.payment.sync-paused.member.member.description": "This workspace has reached its maximum member capacity and synchronization has been paused. Please contact your workspace owner to either adjust team membership or upgrade the plan to resume syncing.",
   "com.affine.payment.sync-paused.member.member.confirm": "Got It",
-  "com.affine.server.delete": "Delete Server"
+  "com.affine.server.delete": "Delete Server",
+  "com.affine.minimum-client.title": "Client is outdated",
+  "com.affine.minimum-client.outdated.message": "This client is outdated, for the security of your data, please update the client, before accessing the data, or visit our web app.",
+  "com.affine.minimum-client.advanced.message": "This client app is not supported by the server yet, for the security of your data, please download the matching client, before accessing the data, or visit our web app.",
+  "com.affine.minimum-client.outdated.button": "Update client",
+  "com.affine.minimum-client.advanced.button": "Download client"
 }

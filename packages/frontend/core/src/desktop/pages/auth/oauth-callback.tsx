@@ -1,3 +1,4 @@
+import { ErrorNames, UserFriendlyError } from '@affine/graphql';
 import { useService } from '@toeverything/infra';
 import { useEffect, useRef } from 'react';
 import {
@@ -8,7 +9,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 
-import { AuthService } from '../../../modules/cloud';
+import { AuthService, isBackendError } from '../../../modules/cloud';
 import { supportedClient } from './common';
 
 interface LoaderData {
@@ -80,8 +81,21 @@ export const Component = () => {
         // TODO(@forehalo): need a good way to go back to previous tab and close current one
         nav(redirectUri ?? '/');
       })
-      .catch(e => {
-        nav(`/sign-in?error=${encodeURIComponent(e.message)}`);
+      .catch(err => {
+        if (
+          err instanceof Error &&
+          isBackendError(err) &&
+          UserFriendlyError.fromAnyError(err).name ===
+            ErrorNames.UNSUPPORTED_CLIENT_VERSION
+        ) {
+          const { action } = UserFriendlyError.fromAnyError(err).args;
+          nav(
+            `/sign-in?error=${encodeURIComponent(err.message)}&action=${encodeURIComponent(action as string)}`
+          );
+          return;
+        }
+        nav(`/sign-in?error=${encodeURIComponent(err.message)}`);
+        return;
       });
   }, [data, auth, nav]);
 
