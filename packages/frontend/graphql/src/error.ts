@@ -8,7 +8,7 @@ export interface UserFriendlyErrorResponse {
   type: string;
   name: ErrorNames;
   message: string;
-  args?: any;
+  data?: any;
   stacktrace?: string;
 }
 
@@ -21,7 +21,7 @@ export class UserFriendlyError
   readonly type = this.response.type;
   override readonly name = this.response.name;
   override readonly message = this.response.message;
-  readonly args = this.response.args;
+  readonly args = this.response.data;
   readonly stacktrace = this.response.stacktrace;
 
   static fromAnyError(response: any) {

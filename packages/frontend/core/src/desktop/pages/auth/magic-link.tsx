@@ -1,4 +1,3 @@
-import { ErrorNames, UserFriendlyError } from '@affine/graphql';
 import { useService } from '@toeverything/infra';
 import { useEffect, useRef } from 'react';
 import {
@@ -79,16 +78,8 @@ export const Component = () => {
           }
         });
       })
-      .catch(err => {
-        const userFriendlyError = UserFriendlyError.fromAnyError(err);
-        if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
-          const { action } = userFriendlyError.args;
-          nav(
-            `/sign-in?error=${encodeURIComponent(userFriendlyError.message)}&action=${encodeURIComponent(action as string)}`
-          );
-          return;
-        }
-        nav(`/sign-in?error=${encodeURIComponent(err.message)}`);
+      .catch(e => {
+        nav(`/sign-in?error=${encodeURIComponent(e.message)}`);
       });
   }, [auth, data, data.email, data.redirectUri, data.token, nav]);
 

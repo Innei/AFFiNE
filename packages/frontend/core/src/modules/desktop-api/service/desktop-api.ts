@@ -1,4 +1,5 @@
 import { notify } from '@affine/component';
+import { ErrorNames, UserFriendlyError } from '@affine/graphql';
 import { I18n } from '@affine/i18n';
 import {
   init,
@@ -178,10 +179,37 @@ export class DesktopApiService extends Service {
           }
         }
       })().catch(e => {
-        notify.error({
-          title: I18n['com.affine.auth.toast.title.failed'](),
-          message: (e as any).message,
-        });
+        const userFriendlyError = UserFriendlyError.fromAnyError(e);
+        if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
+          const { action } = userFriendlyError.args;
+          notify.error({
+            title: I18n['com.affine.minimum-client.title'](),
+            message:
+              I18n[
+                `com.affine.minimum-client.${action === 'upgrade' ? 'outdated' : 'advanced'}.message`
+              ](),
+            action: {
+              label:
+                I18n[
+                  `com.affine.minimum-client.${action === 'upgrade' ? 'outdated' : 'advanced'}.button`
+                ](),
+              onClick: () =>
+                window.open(
+                  BUILD_CONFIG.downloadUrl,
+                  '_blank',
+                  'noreferrer noopener'
+                ),
+              buttonProps: {
+                variant: 'primary',
+              },
+            },
+          });
+        } else {
+          notify.error({
+            title: I18n['com.affine.auth.toast.title.failed'](),
+            message: (e as any).message,
+          });
+        }
       });
     });
   }

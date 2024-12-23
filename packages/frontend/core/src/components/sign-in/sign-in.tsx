@@ -5,7 +5,11 @@ import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hoo
 import { AuthService, ServerService } from '@affine/core/modules/cloud';
 import type { AuthSessionStatus } from '@affine/core/modules/cloud/entities/session';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
-import { ServerDeploymentType } from '@affine/graphql';
+import {
+  ErrorNames,
+  ServerDeploymentType,
+  UserFriendlyError,
+} from '@affine/graphql';
 import { Trans, useI18n } from '@affine/i18n';
 import { ArrowRightBigIcon, PublishIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
@@ -123,14 +127,41 @@ export const SignInStep = ({
     } catch (err) {
       console.error(err);
 
-      // TODO(@eyhn): better error handling
-      notify.error({
-        title: 'Failed to send email. Please try again.',
-      });
+      const userFriendlyError = UserFriendlyError.fromAnyError(err);
+      if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
+        const { action } = userFriendlyError.args;
+        notify.error({
+          title: t['com.affine.minimum-client.title'](),
+          message:
+            t[
+              `com.affine.minimum-client.${action === 'upgrade' ? 'outdated' : 'advanced'}.message`
+            ](),
+          action: {
+            label:
+              t[
+                `com.affine.minimum-client.${action === 'upgrade' ? 'outdated' : 'advanced'}.button`
+              ](),
+            onClick: () =>
+              window.open(
+                BUILD_CONFIG.downloadUrl,
+                '_blank',
+                'noreferrer noopener'
+              ),
+            buttonProps: {
+              variant: 'primary',
+            },
+          },
+        });
+      } else {
+        // TODO(@eyhn): better error handling
+        notify.error({
+          title: 'Failed to send email. Please try again.',
+        });
+      }
     }
 
     setIsMutating(false);
-  }, [authService, changeState, email]);
+  }, [authService, changeState, email, t]);
 
   const onAddSelfhosted = useCallback(() => {
     changeState(prev => ({

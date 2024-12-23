@@ -1,4 +1,3 @@
-import { ErrorNames, UserFriendlyError } from '@affine/graphql';
 import { useService } from '@toeverything/infra';
 import { useEffect, useRef } from 'react';
 import {
@@ -81,17 +80,8 @@ export const Component = () => {
         // TODO(@forehalo): need a good way to go back to previous tab and close current one
         nav(redirectUri ?? '/');
       })
-      .catch(err => {
-        const userFriendlyError = UserFriendlyError.fromAnyError(err);
-        if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
-          const { action } = userFriendlyError.args;
-          nav(
-            `/sign-in?error=${encodeURIComponent(userFriendlyError.message)}&action=${encodeURIComponent(action as string)}`
-          );
-          return;
-        }
-        nav(`/sign-in?error=${encodeURIComponent(err.message)}`);
-        return;
+      .catch(e => {
+        nav(`/sign-in?error=${encodeURIComponent(e.message)}`);
       });
   }, [data, auth, nav]);
 

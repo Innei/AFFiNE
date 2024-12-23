@@ -1,12 +1,15 @@
 import {
+  ErrorNames,
   removeAvatarMutation,
   updateUserProfileMutation,
   uploadAvatarMutation,
+  UserFriendlyError,
 } from '@affine/graphql';
 import { Store } from '@toeverything/infra';
 
 import type { GlobalState } from '../../storage';
 import type { AuthSessionInfo } from '../entities/session';
+import { BackendError } from '../error';
 import type { FetchService } from '../services/fetch';
 import type { GraphQLService } from '../services/graphql';
 import type { ServerService } from '../services/server';
@@ -99,6 +102,12 @@ export class AuthStore extends Store {
     });
 
     if (!res.ok) {
+      const error = await res.json();
+
+      const userFriendlyError = UserFriendlyError.fromAnyError(error);
+      if (userFriendlyError.name === ErrorNames.UNSUPPORTED_CLIENT_VERSION) {
+        throw new BackendError(userFriendlyError, res.status);
+      }
       throw new Error(`Failed to check user by email: ${email}`);
     }
 
