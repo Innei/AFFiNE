@@ -26,6 +26,7 @@ runs:
         DEV_SERVER_URL: http://localhost:8080
         COPILOT_OPENAI_API_KEY: ${{ inputs.openai-key }}
         COPILOT_FAL_API_KEY: ${{ inputs.fal-key }}
+        COPILOT_PERPLEXITY_API_KEY: ${{ inputs.perplexity-key }}
 
     - name: Upload test results
       if: ${{ failure() }}

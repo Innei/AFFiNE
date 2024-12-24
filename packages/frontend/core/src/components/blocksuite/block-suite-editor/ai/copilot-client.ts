@@ -12,6 +12,7 @@ import {
   type QueryOptions,
   type QueryResponse,
   type RequestOptions,
+  updateCopilotSessionMutation,
   UserFriendlyError,
 } from '@affine/graphql';
 import {
@@ -78,6 +79,18 @@ export class CopilotClient {
       },
     });
     return res.createCopilotSession;
+  }
+
+  async updateSession(
+    options: OptionsField<typeof updateCopilotSessionMutation>
+  ) {
+    const res = await this.gql({
+      query: updateCopilotSessionMutation,
+      variables: {
+        options,
+      },
+    });
+    return res.updateCopilotSession;
   }
 
   async forkSession(options: OptionsField<typeof forkCopilotSessionMutation>) {

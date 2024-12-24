@@ -184,6 +184,31 @@ export async function createCopilotSession(
   return res.body.data.createCopilotSession;
 }
 
+export async function updateCopilotSession(
+  app: INestApplication,
+  userToken: string,
+  sessionId: string,
+  promptName: string
+): Promise<string> {
+  const res = await request(app.getHttpServer())
+    .post(gql)
+    .auth(userToken, { type: 'bearer' })
+    .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
+    .send({
+      query: `
+        mutation updateCopilotSession($options: UpdateChatSessionInput!) {
+          updateCopilotSession(options: $options)
+        }
+      `,
+      variables: { options: { sessionId, promptName } },
+    })
+    .expect(200);
+
+  handleGraphQLError(res);
+
+  return res.body.data.updateCopilotSession;
+}
+
 export async function forkCopilotSession(
   app: INestApplication,
   userToken: string,

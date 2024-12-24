@@ -1,11 +1,14 @@
 import { AIStarIcon } from '@blocksuite/affine-components/icons';
+import { unsafeCSSVarV2 } from '@blocksuite/affine-shared/theme';
 import { stopPropagation } from '@blocksuite/affine-shared/utils';
-import { WithDisposable } from '@blocksuite/global/utils';
-import { SendIcon } from '@blocksuite/icons/lit';
+import { SignalWatcher, WithDisposable } from '@blocksuite/global/utils';
+import { PublishIcon, SendIcon } from '@blocksuite/icons/lit';
 import { css, html, LitElement, nothing } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 
-export class AIPanelInput extends WithDisposable(LitElement) {
+import type { AINetworkSearchConfig } from '../../type';
+
+export class AIPanelInput extends SignalWatcher(WithDisposable(LitElement)) {
   static override styles = css`
     :host {
       width: 100%;
@@ -20,8 +23,9 @@ export class AIPanelInput extends WithDisposable(LitElement) {
       background: var(--affine-background-overlay-panel-color);
     }
 
-    .icon {
+    .star {
       display: flex;
+      padding: 2px;
       align-items: center;
     }
 
@@ -66,21 +70,35 @@ export class AIPanelInput extends WithDisposable(LitElement) {
       display: flex;
       align-items: center;
       padding: 2px;
-      gap: 10px;
+      gap: 4px;
       border-radius: 4px;
-      background: var(--affine-black-10, rgba(0, 0, 0, 0.1));
-
+      background: ${unsafeCSSVarV2('icon/disable')};
       svg {
-        width: 16px;
-        height: 16px;
-        color: var(--affine-pure-white, #fff);
+        width: 20px;
+        height: 20px;
+        color: ${unsafeCSSVarV2('button/pureWhiteText')};
       }
     }
     .arrow[data-active] {
-      background: var(--affine-brand-color, #1e96eb);
+      background: ${unsafeCSSVarV2('icon/activated')};
     }
     .arrow[data-active]:hover {
       cursor: pointer;
+    }
+    .network {
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      gap: 4px;
+      cursor: pointer;
+      svg {
+        width: 20px;
+        height: 20px;
+        color: ${unsafeCSSVarV2('icon/primary')};
+      }
+    }
+    .network[data-active='true'] svg {
+      color: ${unsafeCSSVarV2('icon/activated')};
     }
   `;
 
@@ -101,12 +119,14 @@ export class AIPanelInput extends WithDisposable(LitElement) {
 
   private readonly _onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-      e.preventDefault();
-      this._sendToAI();
+      this._sendToAI(e);
     }
   };
 
-  private readonly _sendToAI = () => {
+  private readonly _sendToAI = (e: MouseEvent | KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const value = this.textarea.value.trim();
     if (value.length === 0) return;
 
@@ -114,9 +134,17 @@ export class AIPanelInput extends WithDisposable(LitElement) {
     this.remove();
   };
 
+  private readonly _toggleNetworkSearch = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const enable = this.networkSearchConfig.enabled.value;
+    this.networkSearchConfig.setEnabled(!enable);
+  };
+
   override render() {
     return html`<div class="root">
-      <div class="icon">${AIStarIcon}</div>
+      <div class="star">${AIStarIcon}</div>
       <div class="textarea-container">
         <textarea
           placeholder="What are your thoughts?"
@@ -131,6 +159,21 @@ export class AIPanelInput extends WithDisposable(LitElement) {
           @paste=${stopPropagation}
           @keyup=${stopPropagation}
         ></textarea>
+        ${this.networkSearchConfig.visible.value
+          ? html`
+              <div
+                class="network"
+                data-active=${!!this.networkSearchConfig.enabled.value}
+                @click=${this._toggleNetworkSearch}
+                @pointerdown=${stopPropagation}
+              >
+                ${PublishIcon()}
+                <affine-tooltip .offset=${12}
+                  >Toggle Network Search</affine-tooltip
+                >
+              </div>
+            `
+          : nothing}
         <div
           class="arrow"
           @click=${this._sendToAI}
@@ -156,6 +199,9 @@ export class AIPanelInput extends WithDisposable(LitElement) {
 
   @state()
   private accessor _hasContent = false;
+
+  @property({ attribute: false })
+  accessor networkSearchConfig!: AINetworkSearchConfig;
 
   @property({ attribute: false })
   accessor onFinish: ((input: string) => void) | undefined = undefined;

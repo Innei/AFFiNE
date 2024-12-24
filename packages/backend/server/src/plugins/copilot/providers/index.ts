@@ -124,9 +124,7 @@ export class CopilotProviderService {
     if (!this.cachedProviders.has(provider)) {
       this.cachedProviders.set(provider, this.create(provider));
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.cachedProviders.get(provider)!;
+    return this.cachedProviders.get(provider) as CopilotProvider;
   }
 
   async getProviderByCapability<C extends CopilotCapability>(
@@ -196,3 +194,4 @@ export class CopilotProviderService {
 
 export { FalProvider } from './fal';
 export { OpenAIProvider } from './openai';
+export { PerplexityProvider } from './perplexity';

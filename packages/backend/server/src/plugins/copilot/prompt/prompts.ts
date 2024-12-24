@@ -952,6 +952,11 @@ const chat: Prompt[] = [
       },
     ],
   },
+  {
+    name: 'Search With AFFiNE AI',
+    model: 'llama-3.1-sonar-small-128k-online',
+    messages: [],
+  },
   // use for believer plan
   {
     name: 'Chat With AFFiNE AI - Believer',

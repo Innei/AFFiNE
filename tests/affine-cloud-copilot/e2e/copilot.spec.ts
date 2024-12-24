@@ -10,7 +10,10 @@ import {
   getBlockSuiteEditorTitle,
   waitForEditorLoad,
 } from '@affine-test/kit/utils/page-logic';
-import { clickSideBarAllPageButton } from '@affine-test/kit/utils/sidebar';
+import {
+  clickSideBarAllPageButton,
+  clickSideBarUseAvatar,
+} from '@affine-test/kit/utils/sidebar';
 import { createLocalWorkspace } from '@affine-test/kit/utils/workspace';
 import { expect, type Page } from '@playwright/test';
 
@@ -48,14 +51,15 @@ function getUser() {
   };
 }
 
-test.skip(
-  () =>
-    !process.env.COPILOT_OPENAI_API_KEY ||
-    !process.env.COPILOT_FAL_API_KEY ||
-    process.env.COPILOT_OPENAI_API_KEY === '1' ||
-    process.env.COPILOT_FAL_API_KEY === '1',
-  'skip test if no copilot api key'
-);
+const isCopilotConfigured =
+  !!process.env.COPILOT_OPENAI_API_KEY &&
+  !!process.env.COPILOT_FAL_API_KEY &&
+  !!process.env.COPILOT_PERPLEXITY_API_KEY &&
+  process.env.COPILOT_OPENAI_API_KEY !== '1' &&
+  process.env.COPILOT_FAL_API_KEY !== '1' &&
+  process.env.COPILOT_PERPLEXITY_API_KEY !== '1';
+
+test.skip(() => !isCopilotConfigured, 'skip test if no copilot api key');
 
 test('can open chat side panel', async ({ page }) => {
   await openHomePage(page);
@@ -68,13 +72,17 @@ test('can open chat side panel', async ({ page }) => {
   await expect(page.getByTestId('sidebar-tab-content-chat')).toBeVisible();
 });
 
-const makeChat = async (page: Page, content: string) => {
+const openChat = async (page: Page) => {
   if (await page.getByTestId('sidebar-tab-chat').isHidden()) {
     await page.getByTestId('right-sidebar-toggle').click({
       delay: 200,
     });
   }
   await page.getByTestId('sidebar-tab-chat').click();
+};
+
+const makeChat = async (page: Page, content: string) => {
+  await openChat(page);
   await page.getByTestId('chat-panel-input').focus();
   await page.keyboard.type(content);
   await page.keyboard.press('Enter');
@@ -83,6 +91,7 @@ const makeChat = async (page: Page, content: string) => {
 const clearChat = async (page: Page) => {
   await page.getByTestId('chat-panel-clear').click();
   await page.getByTestId('confirm-modal-confirm').click();
+  await page.waitForTimeout(500);
 };
 
 const collectChat = async (page: Page) => {
@@ -342,6 +351,48 @@ test.describe('chat panel', () => {
       const editorContent = await getEditorContent(page);
       expect(editorContent).toBe('');
     }
+  });
+
+  test('can open and close network search', async ({ page }) => {
+    await page.reload();
+    await clickSideBarAllPageButton(page);
+    await page.waitForTimeout(200);
+    await createLocalWorkspace({ name: 'test' }, page);
+    await clickNewPageButton(page);
+    await clickSideBarUseAvatar(page);
+    await page.getByTestId('workspace-modal-account-settings-option').click();
+    await page.getByTestId('experimental-features-trigger').click();
+    await page
+      .getByTestId('experimental-prompt')
+      .getByTestId('affine-checkbox')
+      .click();
+    await page.getByTestId('experimental-confirm-button').click();
+    await page.getByTestId('enable_ai_network_search').click();
+    await page.getByTestId('modal-close-button').click();
+    await openChat(page);
+    await page.getByTestId('chat-network-search').click();
+    await makeChat(page, 'hello');
+    let history = await collectChat(page);
+    expect(history[0]).toEqual({
+      name: 'You',
+      content: 'hello',
+    });
+    expect(history[1].name).toBe('AFFiNE AI');
+    expect(
+      await page.locator('chat-panel affine-link').count()
+    ).toBeGreaterThan(0);
+
+    await clearChat(page);
+    expect((await collectChat(page)).length).toBe(0);
+    await page.getByTestId('chat-network-search').click();
+    await makeChat(page, 'hello');
+    history = await collectChat(page);
+    expect(history[0]).toEqual({
+      name: 'You',
+      content: 'hello',
+    });
+    expect(history[1].name).toBe('AFFiNE AI');
+    expect(await page.locator('chat-panel affine-link').count()).toBe(0);
   });
 });
 

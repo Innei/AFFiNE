@@ -17,6 +17,7 @@ import {
   getSelectedTextContent,
 } from '../utils/selection-utils';
 import type { ChatAction, ChatContextValue, ChatItem } from './chat-context';
+import type { AINetworkSearchConfig } from './chat-panel-input';
 import type { ChatPanelMessages } from './chat-panel-messages';
 
 export class ChatPanel extends WithDisposable(ShadowlessElement) {
@@ -142,6 +143,9 @@ export class ChatPanel extends WithDisposable(ShadowlessElement) {
 
   @property({ attribute: false })
   accessor doc!: Blocks;
+
+  @property({ attribute: false })
+  accessor networkSearchConfig!: AINetworkSearchConfig;
 
   @state()
   accessor isLoading = false;
@@ -280,6 +284,7 @@ export class ChatPanel extends WithDisposable(ShadowlessElement) {
       ></chat-panel-messages>
       <chat-panel-input
         .chatContextValue=${this.chatContextValue}
+        .networkSearchConfig=${this.networkSearchConfig}
         .updateContext=${this.updateContext}
         .host=${this.host}
         .cleanupHistories=${this._cleanupHistories}

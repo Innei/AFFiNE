@@ -1,4 +1,4 @@
-import { AIEdgelessRootBlockSpec } from '@affine/core/blocksuite/presets/ai';
+import { createAIEdgelessRootBlockSpec } from '@affine/core/blocksuite/presets/ai';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { builtInTemplates as builtInEdgelessTemplates } from '@affine/templates/edgeless';
 import { builtInTemplates as builtInStickersTemplates } from '@affine/templates/stickers';
@@ -22,7 +22,10 @@ export function createEdgelessModeSpecs(
   enableAffineExtension(framework, edgelessSpec);
   if (enableAI) {
     enableAIExtension(edgelessSpec);
-    edgelessSpec.replace(EdgelessRootBlockSpec, AIEdgelessRootBlockSpec);
+    edgelessSpec.replace(
+      EdgelessRootBlockSpec,
+      createAIEdgelessRootBlockSpec(framework)
+    );
   }
 
   return edgelessSpec.value;

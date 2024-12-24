@@ -123,6 +123,15 @@ export interface ChatSessionOptions {
   promptName: string;
 }
 
+export interface ChatSessionUpdateOptions {
+  sessionId: string;
+  parentSessionId: string | null;
+  userId: string;
+  workspaceId: string;
+  docId: string;
+  promptName: string;
+}
+
 export interface ChatSessionForkOptions
   extends Omit<ChatSessionOptions, 'promptName'> {
   sessionId: string;
@@ -154,6 +163,7 @@ export type ListHistoriesOptions = {
 export enum CopilotProviderType {
   FAL = 'fal',
   OpenAI = 'openai',
+  Perplexity = 'perplexity',
   // only for test
   Test = 'test',
 }

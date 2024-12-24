@@ -1,9 +1,11 @@
 import { ChatPanel } from '@affine/core/blocksuite/presets/ai';
+import { AINetworkSearchService } from '@affine/core/modules/ai-button/services/network-search';
 import {
   DocModeProvider,
   RefNodeSlotsProvider,
 } from '@blocksuite/affine/blocks';
 import type { AffineEditorContainer } from '@blocksuite/affine/presets';
+import { useFramework } from '@toeverything/infra';
 import { forwardRef, useEffect, useRef } from 'react';
 
 import * as styles from './chat.css';
@@ -20,6 +22,7 @@ export const EditorChatPanel = forwardRef(function EditorChatPanel(
 ) {
   const chatPanelRef = useRef<ChatPanel | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const framework = useFramework();
 
   useEffect(() => {
     if (onLoad && chatPanelRef.current) {
@@ -45,6 +48,13 @@ export const EditorChatPanel = forwardRef(function EditorChatPanel(
       chatPanelRef.current.host = editor.host;
       chatPanelRef.current.doc = editor.doc;
       containerRef.current?.append(chatPanelRef.current);
+      const searchService = framework.get(AINetworkSearchService);
+      const networkSearchConfig = {
+        visible: searchService.visible,
+        enabled: searchService.enabled,
+        setEnabled: searchService.setEnabled,
+      };
+      chatPanelRef.current.networkSearchConfig = networkSearchConfig;
     } else {
       chatPanelRef.current.host = editor.host;
       chatPanelRef.current.doc = editor.doc;
@@ -63,7 +73,7 @@ export const EditorChatPanel = forwardRef(function EditorChatPanel(
     ];
 
     return () => disposable.forEach(d => d?.dispose());
-  }, [editor]);
+  }, [editor, framework]);
 
   return <div className={styles.root} ref={containerRef} />;
 });

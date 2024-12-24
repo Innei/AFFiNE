@@ -1,4 +1,4 @@
-import { AIPageRootBlockSpec } from '@affine/core/blocksuite/presets/ai';
+import { createAIPageRootBlockSpec } from '@affine/core/blocksuite/presets/ai';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { PageRootBlockSpec, SpecProvider } from '@blocksuite/affine/blocks';
 import type { ExtensionType } from '@blocksuite/affine/store';
@@ -16,7 +16,7 @@ export function createPageModeSpecs(
   enableAffineExtension(framework, pageSpec);
   if (enableAI) {
     enableAIExtension(pageSpec);
-    pageSpec.replace(PageRootBlockSpec, AIPageRootBlockSpec);
+    pageSpec.replace(PageRootBlockSpec, createAIPageRootBlockSpec(framework));
   }
   return pageSpec.value;
 }

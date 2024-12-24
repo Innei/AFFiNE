@@ -188,6 +188,11 @@ export interface CreateChatSessionInput {
   workspaceId: Scalars['String']['input'];
 }
 
+export interface UpdateChatSessionInput {
+  sessionId: Scalars['String']['input'];
+  promptName: Scalars['String']['input'];
+}
+
 export interface CreateCheckoutSessionInput {
   args?: InputMaybe<Scalars['JSONObject']['input']>;
   coupon?: InputMaybe<Scalars['String']['input']>;
@@ -686,6 +691,10 @@ export interface MutationCreateCopilotPromptArgs {
 
 export interface MutationCreateCopilotSessionArgs {
   options: CreateChatSessionInput;
+}
+
+export interface MutationUpdateCopilotSessionArgs {
+  options: UpdateChatSessionInput;
 }
 
 export interface MutationCreateInviteLinkArgs {
@@ -1594,6 +1603,15 @@ export type CreateCopilotSessionMutationVariables = Exact<{
 export type CreateCopilotSessionMutation = {
   __typename?: 'Mutation';
   createCopilotSession: string;
+};
+
+export type UpdateCopilotSessionMutationVariables = Exact<{
+  options: UpdateChatSessionInput;
+}>;
+
+export type UpdateCopilotSessionMutation = {
+  __typename?: 'Mutation';
+  updateCopilotSession: string;
 };
 
 export type CreateCustomerPortalMutationVariables = Exact<{
@@ -3070,6 +3088,11 @@ export type Mutations =
       variables: CreateCopilotSessionMutationVariables;
       response: CreateCopilotSessionMutation;
     }
+  | {
+    name: 'updateCopilotSessionMutation';
+    variables: UpdateCopilotSessionMutationVariables;
+    response: UpdateCopilotSessionMutation;
+  }
   | {
       name: 'createCustomerPortalMutation';
       variables: CreateCustomerPortalMutationVariables;

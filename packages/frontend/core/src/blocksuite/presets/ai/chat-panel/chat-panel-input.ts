@@ -1,6 +1,14 @@
+import { stopPropagation } from '@affine/core/utils';
 import type { EditorHost } from '@blocksuite/affine/block-std';
 import { type AIError, openFileOrFiles } from '@blocksuite/affine/blocks';
-import { assertExists, WithDisposable } from '@blocksuite/affine/global/utils';
+import {
+  assertExists,
+  SignalWatcher,
+  WithDisposable,
+} from '@blocksuite/affine/global/utils';
+import { unsafeCSSVarV2 } from '@blocksuite/affine-shared/theme';
+import { ImageIcon, PublishIcon } from '@blocksuite/icons/lit';
+import type { Signal } from '@preact/signals-core';
 import { css, html, LitElement, nothing } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
@@ -10,7 +18,6 @@ import {
   ChatClearIcon,
   ChatSendIcon,
   CloseIcon,
-  ImageIcon,
 } from '../_common/icons';
 import { AIProvider } from '../provider';
 import { reportResponse } from '../utils/action-reporter';
@@ -24,7 +31,13 @@ function getFirstTwoLines(text: string) {
   return lines.slice(0, 2);
 }
 
-export class ChatPanelInput extends WithDisposable(LitElement) {
+export interface AINetworkSearchConfig {
+  visible: Signal<boolean | undefined>;
+  enabled: Signal<boolean | undefined>;
+  setEnabled: (state: boolean) => void;
+}
+
+export class ChatPanelInput extends SignalWatcher(WithDisposable(LitElement)) {
   static override styles = css`
     .chat-panel-input {
       display: flex;
@@ -104,10 +117,28 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
         margin-left: auto;
       }
 
-      .image-upload {
+      .image-upload,
+      .chat-network-search {
         display: flex;
         justify-content: center;
         align-items: center;
+        svg {
+          width: 20px;
+          height: 20px;
+          color: ${unsafeCSSVarV2('icon/primary')};
+        }
+      }
+      .chat-network-search[data-active='true'] svg {
+        color: ${unsafeCSSVarV2('icon/activated')};
+      }
+
+      .image-upload[aria-disabled='true'],
+      .chat-network-search[aria-disabled='true'] {
+        cursor: not-allowed;
+      }
+      .image-upload[aria-disabled='true'] svg,
+      .chat-network-search[aria-disabled='true'] svg {
+        color: var(--affine-text-disable-color) !important;
       }
     }
 
@@ -235,6 +266,9 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
   @property({ attribute: false })
   accessor cleanupHistories!: () => Promise<void>;
 
+  @property({ attribute: false })
+  accessor networkSearchConfig!: AINetworkSearchConfig;
+
   private _addImages(images: File[]) {
     const oldImages = this.chatContextValue.images;
     this.updateContext({
@@ -296,6 +330,23 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
     `;
   }
 
+  private readonly _toggleNetworkSearch = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const enable = this.networkSearchConfig.enabled.value;
+    this.networkSearchConfig.setEnabled(!enable);
+  };
+
+  private readonly _uploadImageFiles = async (_e: MouseEvent) => {
+    const images = await openFileOrFiles({
+      acceptType: 'Images',
+      multiple: true,
+    });
+    if (!images) return;
+    this._addImages(images);
+  };
+
   override connectedCallback() {
     super.connectedCallback();
 
@@ -305,7 +356,7 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
           if (this.host === host) {
             context && this.updateContext(context);
             await this.updateComplete;
-            await this.send(input);
+            input && (await this.send(input));
           }
         }
       )
@@ -316,7 +367,9 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
     const { images, status } = this.chatContextValue;
     const hasImages = images.length > 0;
     const maxHeight = hasImages ? 272 + 2 : 200 + 2;
-
+    const networkDisabled = !!this.chatContextValue.images.length;
+    const networkActive = !!this.networkSearchConfig.enabled.value;
+    const uploadDisabled = networkActive && !networkDisabled;
     return html`<style>
         .chat-panel-input {
           border-color: ${this.focused
@@ -364,8 +417,7 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
           }}
           @keydown=${async (evt: KeyboardEvent) => {
             if (evt.key === 'Enter' && !evt.shiftKey && !evt.isComposing) {
-              evt.preventDefault();
-              await this.send();
+              this._onTextareaSend(evt);
             }
           }}
           @focus=${() => {
@@ -399,19 +451,29 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
           >
             ${ChatClearIcon}
           </div>
+          ${this.networkSearchConfig.visible.value
+            ? html`
+                <div
+                  class="chat-network-search"
+                  data-testid="chat-network-search"
+                  aria-disabled=${networkDisabled}
+                  data-active=${networkActive}
+                  @click=${networkDisabled
+                    ? undefined
+                    : this._toggleNetworkSearch}
+                  @pointerdown=${stopPropagation}
+                >
+                  ${PublishIcon()}
+                </div>
+              `
+            : nothing}
           ${images.length < MaximumImageCount
             ? html`<div
                 class="image-upload"
-                @click=${async () => {
-                  const images = await openFileOrFiles({
-                    acceptType: 'Images',
-                    multiple: true,
-                  });
-                  if (!images) return;
-                  this._addImages(images);
-                }}
+                aria-disabled=${uploadDisabled}
+                @click=${uploadDisabled ? undefined : this._uploadImageFiles}
               >
-                ${ImageIcon}
+                ${ImageIcon()}
               </div>`
             : nothing}
           ${status === 'transmitting'
@@ -425,7 +487,7 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
                 ${ChatAbortIcon}
               </div>`
             : html`<div
-                @click="${this.send}"
+                @click="${this._onTextareaSend}"
                 class="chat-panel-send"
                 aria-disabled=${this.isInputEmpty}
                 data-testid="chat-panel-send"
@@ -436,19 +498,30 @@ export class ChatPanelInput extends WithDisposable(LitElement) {
       </div>`;
   }
 
-  send = async (input?: string) => {
+  private readonly _onTextareaSend = (e: MouseEvent | KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const value = this.textarea.value.trim();
+    if (value.length === 0) return;
+
+    this.textarea.value = '';
+    this.isInputEmpty = true;
+    this.textarea.style.height = 'unset';
+
+    this.send(value).catch(console.error);
+  };
+
+  send = async (text: string) => {
     const { status, markdown } = this.chatContextValue;
     if (status === 'loading' || status === 'transmitting') return;
 
-    const text = input || this.textarea.value;
     const { images } = this.chatContextValue;
     if (!text && images.length === 0) {
       return;
     }
     const { doc } = this.host;
-    this.textarea.value = '';
-    this.isInputEmpty = true;
-    this.textarea.style.height = 'unset';
+
     this.updateContext({
       images: [],
       status: 'loading',

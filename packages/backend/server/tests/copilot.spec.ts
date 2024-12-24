@@ -68,7 +68,10 @@ test.beforeEach(async t => {
               apiKey: process.env.COPILOT_OPENAI_API_KEY ?? '1',
             },
             fal: {
-              apiKey: '1',
+              apiKey: process.env.COPILOT_FAL_API_KEY ?? '1',
+            },
+            perplexity: {
+              apiKey: process.env.COPILOT_PERPLEXITY_API_KEY ?? '1',
             },
           },
         },
@@ -272,6 +275,46 @@ test('should be able to manage chat session', async t => {
     });
     t.is(newSessionId, sessionId, 'should get same session id');
   }
+});
+
+test('should be able to update chat session', async t => {
+  const { prompt, session } = t.context;
+
+  // Set up a prompt to be used in the session
+  await prompt.set('prompt', 'model', [
+    { role: 'system', content: 'hello {{word}}' },
+  ]);
+
+  const commonParams = {
+    docId: 'test',
+    workspaceId: 'test',
+    parentSessionId: null,
+    userId,
+  };
+
+  // Create a session
+  const sessionId = await session.create({
+    promptName: 'prompt',
+    ...commonParams,
+  });
+  t.truthy(sessionId, 'should create session');
+
+  // Update the session
+  const updatedSessionId = await session.update({
+    sessionId,
+    promptName: 'Search With AFFiNE AI',
+    ...commonParams,
+  });
+  t.is(updatedSessionId, sessionId, 'should update session with same id');
+
+  // Verify the session was updated
+  const updatedSession = await session.get(sessionId);
+  t.truthy(updatedSession, 'should retrieve updated session');
+  t.is(
+    updatedSession?.config.promptName,
+    'Search With AFFiNE AI',
+    'should have updated prompt name'
+  );
 });
 
 test('should be able to fork chat session', async t => {

@@ -84,6 +84,7 @@ jobs:
           CARGO_TARGET_DIR: '${{ github.workspace }}/target'
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           COPILOT_FAL_API_KEY: ${{ secrets.COPILOT_FAL_API_KEY }}
+          COPILOT_PERPLEXITY_API_KEY: ${{ secrets.COPILOT_PERPLEXITY_API_KEY }}
 
       - name: Upload server test coverage results
         uses: codecov/codecov-action@v5
@@ -147,6 +148,7 @@ jobs:
           script: yarn affine @affine-test/affine-cloud-copilot e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
           openai-key: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           fal-key: ${{ secrets.COPILOT_FAL_API_KEY }}
+          perplexity-key: ${{ secrets.COPILOT_PERPLEXITY_API_KEY }}
 
   test-done:
     needs:

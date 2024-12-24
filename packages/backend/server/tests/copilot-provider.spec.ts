@@ -13,6 +13,7 @@ import {
   CopilotProviderService,
   FalProvider,
   OpenAIProvider,
+  PerplexityProvider,
   registerCopilotProvider,
   unregisterCopilotProvider,
 } from '../src/plugins/copilot/providers';
@@ -47,8 +48,10 @@ const test = ava as TestFn<Tester>;
 const isCopilotConfigured =
   !!process.env.COPILOT_OPENAI_API_KEY &&
   !!process.env.COPILOT_FAL_API_KEY &&
+  !!process.env.COPILOT_PERPLEXITY_API_KEY &&
   process.env.COPILOT_OPENAI_API_KEY !== '1' &&
-  process.env.COPILOT_FAL_API_KEY !== '1';
+  process.env.COPILOT_FAL_API_KEY !== '1' &&
+  process.env.COPILOT_PERPLEXITY_API_KEY !== '1';
 const runIfCopilotConfigured = test.macro(
   async (
     t,
@@ -74,6 +77,9 @@ test.serial.before(async t => {
             },
             fal: {
               apiKey: process.env.COPILOT_FAL_API_KEY,
+            },
+            perplexity: {
+              apiKey: process.env.COPILOT_PERPLEXITY_API_KEY,
             },
           },
         },
@@ -111,6 +117,7 @@ test.serial.before(async t => {
 
   registerCopilotProvider(OpenAIProvider);
   registerCopilotProvider(FalProvider);
+  registerCopilotProvider(PerplexityProvider);
 
   for (const name of await prompt.listNames()) {
     await prompt.delete(name);
@@ -124,6 +131,7 @@ test.serial.before(async t => {
 test.after(async _ => {
   unregisterCopilotProvider(OpenAIProvider.type);
   unregisterCopilotProvider(FalProvider.type);
+  unregisterCopilotProvider(PerplexityProvider.type);
 });
 
 test.after(async t => {
@@ -152,7 +160,6 @@ const checkMDList = (text: string) => {
       return false;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
     const currentIndent = line.match(/^( *)/)?.[0].length!;
     if (Number.isNaN(currentIndent) || currentIndent % 2 !== 0) {
       return false;
@@ -282,6 +289,8 @@ const actions = [
       'Make it longer',
       'Make it shorter',
       'Continue writing',
+      'Chat With AFFiNE AI',
+      'Search With AFFiNE AI',
     ],
     messages: [{ role: 'user' as const, content: TestAssets.SSOT }],
     verifier: (t: ExecutionContext<Tester>, result: string) => {

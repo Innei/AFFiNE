@@ -16,6 +16,7 @@ import {
   CopilotProviderService,
   FalProvider,
   OpenAIProvider,
+  PerplexityProvider,
   registerCopilotProvider,
   unregisterCopilotProvider,
 } from '../src/plugins/copilot/providers';
@@ -41,6 +42,7 @@ import {
   sse2array,
   textToEventStream,
   unsplashSearch,
+  updateCopilotSession,
 } from './utils/copilot';
 
 const test = ava as TestFn<{
@@ -61,6 +63,9 @@ test.beforeEach(async t => {
               apiKey: '1',
             },
             fal: {
+              apiKey: '1',
+            },
+            perplexity: {
               apiKey: '1',
             },
             unsplashKey: process.env.UNSPLASH_ACCESS_KEY || '1',
@@ -91,6 +96,7 @@ test.beforeEach(async t => {
 
   unregisterCopilotProvider(OpenAIProvider.type);
   unregisterCopilotProvider(FalProvider.type);
+  unregisterCopilotProvider(PerplexityProvider.type);
   registerCopilotProvider(MockCopilotTestProvider);
 
   await prompt.set(promptName, 'test', [
@@ -153,6 +159,85 @@ test('should create session correctly', async t => {
       id,
       'should able to create session after user have permission'
     );
+  }
+});
+
+test('should update session correctly', async t => {
+  const { app } = t.context;
+
+  const assertUpdateSession = async (
+    sessionId: string,
+    error: string,
+    asserter = async (x: any) => {
+      t.truthy(await x, error);
+    }
+  ) => {
+    await asserter(updateCopilotSession(app, token, sessionId, promptName));
+  };
+
+  {
+    const { id: workspaceId } = await createWorkspace(app, token);
+    const docId = randomUUID();
+    const sessionId = await createCopilotSession(
+      app,
+      token,
+      workspaceId,
+      docId,
+      promptName
+    );
+    await assertUpdateSession(
+      sessionId,
+      'should be able to update session with cloud workspace that user can access'
+    );
+  }
+
+  {
+    const sessionId = await createCopilotSession(
+      app,
+      token,
+      randomUUID(),
+      randomUUID(),
+      promptName
+    );
+    await assertUpdateSession(
+      sessionId,
+      'should be able to update session with local workspace'
+    );
+  }
+
+  {
+    const aToken = (await signUp(app, 'test', 'test@affine.pro', '123456'))
+      .token.token;
+    const { id: workspaceId } = await createWorkspace(app, aToken);
+    const inviteId = await inviteUser(
+      app,
+      aToken,
+      workspaceId,
+      'darksky@affine.pro'
+    );
+    await acceptInviteById(app, workspaceId, inviteId, false);
+    const sessionId = await createCopilotSession(
+      app,
+      token,
+      workspaceId,
+      randomUUID(),
+      promptName
+    );
+    await assertUpdateSession(
+      sessionId,
+      'should able to update session after user have permission'
+    );
+  }
+
+  {
+    const sessionId = '123456';
+    await assertUpdateSession(sessionId, '', async x => {
+      await t.throwsAsync(
+        x,
+        { instanceOf: Error },
+        'should not able to update invalid session id'
+      );
+    });
   }
 });
 

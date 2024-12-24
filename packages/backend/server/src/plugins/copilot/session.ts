@@ -23,6 +23,7 @@ import {
   ChatSessionForkOptions,
   ChatSessionOptions,
   ChatSessionState,
+  ChatSessionUpdateOptions,
   getTokenEncoder,
   ListHistoriesOptions,
   PromptMessage,
@@ -46,13 +47,22 @@ export class ChatSession implements AsyncDisposable {
   get config() {
     const {
       sessionId,
+      parentSessionId,
       userId,
       workspaceId,
       docId,
       prompt: { name: promptName, config: promptConfig },
     } = this.state;
 
-    return { sessionId, userId, workspaceId, docId, promptName, promptConfig };
+    return {
+      sessionId,
+      parentSessionId,
+      userId,
+      workspaceId,
+      docId,
+      promptName,
+      promptConfig,
+    };
   }
 
   get stashMessages() {
@@ -198,6 +208,19 @@ export class ChatSessionService {
     private readonly prompt: PromptService
   ) {}
 
+  private async haveSession(sessionId: string, userId: string) {
+    return await this.db.$transaction(async tx => {
+      return await tx.aiSession
+        .count({
+          where: {
+            id: sessionId,
+            userId,
+          },
+        })
+        .then(c => c > 0);
+    });
+  }
+
   private async setSession(state: ChatSessionState): Promise<string> {
     return await this.db.$transaction(async tx => {
       let sessionId = state.sessionId;
@@ -226,15 +249,7 @@ export class ChatSessionService {
         if (id) sessionId = id;
       }
 
-      const haveSession = await tx.aiSession
-        .count({
-          where: {
-            id: sessionId,
-            userId: state.userId,
-          },
-        })
-        .then(c => c > 0);
-
+      const haveSession = await this.haveSession(sessionId, state.userId);
       if (haveSession) {
         // message will only exists when setSession call by session.save
         if (state.messages.length) {
@@ -276,6 +291,22 @@ export class ChatSessionService {
         });
       }
 
+      return sessionId;
+    });
+  }
+
+  private async updateSession(state: ChatSessionState): Promise<string> {
+    return await this.db.$transaction(async tx => {
+      let sessionId = state.sessionId;
+      const haveSession = await this.haveSession(sessionId, state.userId);
+      if (haveSession) {
+        await tx.aiSession.update({
+          where: { id: sessionId },
+          data: {
+            promptName: state.prompt.name,
+          },
+        });
+      }
       return sessionId;
     });
   }
@@ -567,6 +598,19 @@ export class ChatSessionService {
       messages: [],
       // when client create chat session, we always find root session
       parentSessionId: null,
+    });
+  }
+
+  async update(options: ChatSessionUpdateOptions): Promise<string> {
+    const prompt = await this.prompt.get(options.promptName);
+    if (!prompt) {
+      this.logger.error(`Prompt not found: ${options.promptName}`);
+      throw new CopilotPromptNotFound({ name: options.promptName });
+    }
+    return await this.updateSession({
+      ...options,
+      prompt,
+      messages: [],
     });
   }
 

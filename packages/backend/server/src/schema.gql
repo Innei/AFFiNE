@@ -551,6 +551,9 @@ type Mutation {
 
   """Update a copilot prompt"""
   updateCopilotPrompt(messages: [CopilotPromptMessageInput!]!, name: String!): CopilotPromptType!
+
+  """Update a chat session"""
+  updateCopilotSession(options: UpdateChatSessionInput!): String!
   updateProfile(input: UpdateUserInput!): UserType!
 
   """update server runtime configurable setting"""
@@ -863,6 +866,12 @@ type UnknownOauthProviderDataType {
 
 type UnsupportedSubscriptionPlanDataType {
   plan: String!
+}
+
+input UpdateChatSessionInput {
+  """The prompt name to use for the session"""
+  promptName: String!
+  sessionId: String!
 }
 
 input UpdateUserInput {

@@ -1,3 +1,4 @@
+import { AINetworkSearchService } from '@affine/core/modules/ai-button/services/network-search';
 import type { EditorHost } from '@blocksuite/affine/block-std';
 import {
   type AffineAIPanelWidget,
@@ -9,6 +10,7 @@ import {
   NoteDisplayMode,
 } from '@blocksuite/affine/blocks';
 import { assertExists, Bound } from '@blocksuite/affine/global/utils';
+import type { FrameworkProvider } from '@toeverything/infra';
 import type { TemplateResult } from 'lit';
 
 import { createTextRenderer, insertFromMarkdown } from '../_common';
@@ -287,14 +289,21 @@ export function buildCopyConfig(panel: AffineAIPanelWidget) {
 }
 
 export function buildAIPanelConfig(
-  panel: AffineAIPanelWidget
+  panel: AffineAIPanelWidget,
+  framework: FrameworkProvider
 ): AffineAIPanelWidgetConfig {
   const ctx = new AIContext();
+  const searchService = framework.get(AINetworkSearchService);
   return {
     answerRenderer: createTextRenderer(panel.host, { maxHeight: 320 }),
     finishStateConfig: buildFinishConfig(panel, 'chat', ctx),
     generatingStateConfig: buildGeneratingConfig(),
     errorStateConfig: buildErrorConfig(panel),
     copy: buildCopyConfig(panel),
+    networkSearchConfig: {
+      visible: searchService.visible,
+      enabled: searchService.enabled,
+      setEnabled: searchService.setEnabled,
+    },
   };
 }

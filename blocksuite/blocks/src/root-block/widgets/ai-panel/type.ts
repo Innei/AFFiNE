@@ -2,6 +2,7 @@ import type {
   AIError,
   AIItemGroupConfig,
 } from '@blocksuite/affine-components/ai-item';
+import type { Signal } from '@preact/signals-core';
 import type { nothing, TemplateResult } from 'lit';
 
 export interface CopyConfig {
@@ -28,6 +29,12 @@ export interface AIPanelGeneratingConfig {
   stages?: string[];
 }
 
+export interface AINetworkSearchConfig {
+  visible: Signal<boolean | undefined>;
+  enabled: Signal<boolean | undefined>;
+  setEnabled: (state: boolean) => void;
+}
+
 export interface AffineAIPanelWidgetConfig {
   answerRenderer: (
     answer: string,
@@ -44,10 +51,10 @@ export interface AffineAIPanelWidgetConfig {
   finishStateConfig: AIPanelAnswerConfig;
   generatingStateConfig: AIPanelGeneratingConfig;
   errorStateConfig: AIPanelErrorConfig;
+  networkSearchConfig: AINetworkSearchConfig;
   hideCallback?: () => void;
   discardCallback?: () => void;
   inputCallback?: (input: string) => void;
-
   copy?: CopyConfig;
 }
 
