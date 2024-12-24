@@ -2,14 +2,13 @@ import { Scrollable } from '@affine/component';
 import { PageDetailSkeleton } from '@affine/component/page-detail-skeleton';
 import { AIProvider } from '@affine/core/blocksuite/presets/ai';
 import { AffineErrorBoundary } from '@affine/core/components/affine/affine-error-boundary';
-import { BlockSuiteEditor } from '@affine/core/components/blocksuite/block-suite-editor';
+import {
+  BlockSuiteEditor,
+  CustomEditorWrapper,
+} from '@affine/core/components/blocksuite/block-suite-editor';
 import { EditorOutlineViewer } from '@affine/core/components/blocksuite/outline-viewer';
 import { PageNotFound } from '@affine/core/desktop/pages/404';
 import { EditorService } from '@affine/core/modules/editor';
-import {
-  EditorSettingService,
-  fontStyleOptions,
-} from '@affine/core/modules/editor-setting';
 import { DebugLogger } from '@affine/debug';
 import {
   type EdgelessRootService,
@@ -23,9 +22,8 @@ import {
   useService,
   useServices,
 } from '@toeverything/infra';
-import { cssVar } from '@toeverything/theme';
 import clsx from 'clsx';
-import { type CSSProperties, useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { WorkbenchService } from '../../../workbench';
 import type { DocReferenceInfo } from '../../entities/peek-view';
@@ -90,14 +88,6 @@ function DocPeekPreviewEditor({
   const workbench = useService(WorkbenchService).workbench;
   const peekView = useService(PeekViewService).peekView;
   const editorElement = useLiveData(editor.editorContainer$);
-  const editorSetting = useService(EditorSettingService).editorSetting;
-  const settings = useLiveData(
-    editorSetting.settings$.selector(s => ({
-      fontFamily: s.fontFamily,
-      customFontFamily: s.customFontFamily,
-      fullWidthLayout: s.fullWidthLayout,
-    }))
-  );
 
   const handleOnEditorReady = useCallback(
     (editorContainer: AffineEditorContainer) => {
@@ -156,38 +146,21 @@ function DocPeekPreviewEditor({
     peekView.close();
   }, [doc, peekView, workbench]);
 
-  const value = useMemo(() => {
-    const fontStyle = fontStyleOptions.find(
-      option => option.key === settings.fontFamily
-    );
-    if (!fontStyle) {
-      return cssVar('fontSansFamily');
-    }
-    const customFontFamily = settings.customFontFamily;
-
-    return customFontFamily && fontStyle.key === 'Custom'
-      ? `${customFontFamily}, ${fontStyle.value}`
-      : fontStyle.value;
-  }, [settings.customFontFamily, settings.fontFamily]);
-
   return (
     <AffineErrorBoundary>
       <Scrollable.Root>
         <Scrollable.Viewport
           className={clsx('affine-page-viewport', styles.affineDocViewport)}
         >
-          <BlockSuiteEditor
-            className={styles.editor}
-            mode={mode}
-            page={doc.blockSuiteDoc}
-            onEditorReady={handleOnEditorReady}
-            defaultOpenProperty={defaultOpenProperty}
-            style={
-              {
-                '--affine-font-family': value,
-              } as CSSProperties
-            }
-          />
+          <CustomEditorWrapper>
+            <BlockSuiteEditor
+              className={styles.editor}
+              mode={mode}
+              page={doc.blockSuiteDoc}
+              onEditorReady={handleOnEditorReady}
+              defaultOpenProperty={defaultOpenProperty}
+            />
+          </CustomEditorWrapper>
         </Scrollable.Viewport>
         <Scrollable.Scrollbar />
       </Scrollable.Root>
