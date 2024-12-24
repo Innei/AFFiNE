@@ -6,6 +6,10 @@ import { BlockSuiteEditor } from '@affine/core/components/blocksuite/block-suite
 import { EditorOutlineViewer } from '@affine/core/components/blocksuite/outline-viewer';
 import { PageNotFound } from '@affine/core/desktop/pages/404';
 import { EditorService } from '@affine/core/modules/editor';
+import {
+  EditorSettingService,
+  fontStyleOptions,
+} from '@affine/core/modules/editor-setting';
 import { DebugLogger } from '@affine/debug';
 import {
   type EdgelessRootService,
@@ -19,8 +23,9 @@ import {
   useService,
   useServices,
 } from '@toeverything/infra';
+import { cssVar } from '@toeverything/theme';
 import clsx from 'clsx';
-import { useCallback, useEffect } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo } from 'react';
 
 import { WorkbenchService } from '../../../workbench';
 import type { DocReferenceInfo } from '../../entities/peek-view';
@@ -85,6 +90,14 @@ function DocPeekPreviewEditor({
   const workbench = useService(WorkbenchService).workbench;
   const peekView = useService(PeekViewService).peekView;
   const editorElement = useLiveData(editor.editorContainer$);
+  const editorSetting = useService(EditorSettingService).editorSetting;
+  const settings = useLiveData(
+    editorSetting.settings$.selector(s => ({
+      fontFamily: s.fontFamily,
+      customFontFamily: s.customFontFamily,
+      fullWidthLayout: s.fullWidthLayout,
+    }))
+  );
 
   const handleOnEditorReady = useCallback(
     (editorContainer: AffineEditorContainer) => {
@@ -143,6 +156,20 @@ function DocPeekPreviewEditor({
     peekView.close();
   }, [doc, peekView, workbench]);
 
+  const value = useMemo(() => {
+    const fontStyle = fontStyleOptions.find(
+      option => option.key === settings.fontFamily
+    );
+    if (!fontStyle) {
+      return cssVar('fontSansFamily');
+    }
+    const customFontFamily = settings.customFontFamily;
+
+    return customFontFamily && fontStyle.key === 'Custom'
+      ? `${customFontFamily}, ${fontStyle.value}`
+      : fontStyle.value;
+  }, [settings.customFontFamily, settings.fontFamily]);
+
   return (
     <AffineErrorBoundary>
       <Scrollable.Root>
@@ -155,6 +182,11 @@ function DocPeekPreviewEditor({
             page={doc.blockSuiteDoc}
             onEditorReady={handleOnEditorReady}
             defaultOpenProperty={defaultOpenProperty}
+            style={
+              {
+                '--affine-font-family': value,
+              } as CSSProperties
+            }
           />
         </Scrollable.Viewport>
         <Scrollable.Scrollbar />
