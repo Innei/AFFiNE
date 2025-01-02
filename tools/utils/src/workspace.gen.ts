@@ -610,12 +610,12 @@ export const PackageList = [
     workspaceDependencies: ['packages/common/debug'],
   },
   {
-    location: 'tests/affine-cloud',
+    location: 'tests/affine-cloud/cloud',
     name: '@affine-test/affine-cloud',
     workspaceDependencies: ['tests/kit'],
   },
   {
-    location: 'tests/affine-cloud-copilot',
+    location: 'tests/affine-cloud/copilot',
     name: '@affine-test/affine-cloud-copilot',
     workspaceDependencies: ['tests/kit'],
   },
