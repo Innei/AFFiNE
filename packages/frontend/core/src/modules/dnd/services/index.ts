@@ -81,7 +81,7 @@ export class DndService extends Service {
     isDropEvent?: boolean
   ) => {
     if (!isDropEvent) {
-      return {};
+      return this.resolveBlocksuiteExternalData(args.source) || {};
     }
 
     let resolved: AffineDNDData['draggable'] | null = null;
@@ -168,24 +168,30 @@ export class DndService extends Service {
     if (!dndAPI) {
       return null;
     }
-    const encoded = source.getStringData(dndAPI.mimeType);
-    if (!encoded) {
-      return null;
-    }
-    const snapshot = dndAPI.decodeSnapshot(encoded);
-    if (!snapshot) {
-      return null;
-    }
-    const entity = this.resolveBlockSnapshot(snapshot);
-    if (!entity) {
-      return null;
-    }
-    return {
-      entity,
-      from: {
+
+    if (source.types.includes(dndAPI.mimeType)) {
+      const from = {
         at: 'blocksuite-editor',
-      },
-    };
+      } as const;
+
+      let entity: Entity | null = null;
+
+      const encoded = source.getStringData(dndAPI.mimeType);
+      const snapshot = encoded ? dndAPI.decodeSnapshot(encoded) : null;
+      entity = snapshot ? this.resolveBlockSnapshot(snapshot) : null;
+
+      if (!entity) {
+        return {
+          from,
+        };
+      } else {
+        return {
+          entity,
+          from,
+        };
+      }
+    }
+    return null;
   };
 
   private readonly resolveHTML: EntityResolver = html => {

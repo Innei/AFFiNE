@@ -1,3 +1,4 @@
+import { shallowEqual } from '@affine/component';
 import { DEFAULT_SORT_KEY } from '@affine/env/constant';
 import { atom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -10,7 +11,6 @@ import type {
   MetaRecord,
   VirtualizedListProps,
 } from './types';
-import { shallowEqual } from './utils';
 
 // for ease of use in the component tree
 // note: must use selectAtom to access this atom for efficiency

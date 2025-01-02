@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { forwardRef, useCallback, useLayoutEffect, useRef } from 'react';
 import { useTransition } from 'react-transition-state';
 
+import { useDropTarget } from '../../ui/dnd';
 import { Tooltip, type TooltipProps } from '../../ui/tooltip';
 import * as styles from './resize-panel.css';
 
@@ -22,6 +23,7 @@ export interface ResizeHandleProps
   tooltipShortcut?: TooltipProps['shortcut'];
   tooltipOptions?: Partial<Omit<TooltipProps, 'content' | 'shortcut'>>;
   tooltipShortcutClassName?: string;
+  dropTargetOptions?: Parameters<typeof useDropTarget>[0];
 }
 
 export interface ResizePanelProps
@@ -40,6 +42,7 @@ export interface ResizePanelProps
   resizeHandleTooltipOptions?: Partial<
     Omit<TooltipProps, 'content' | 'shortcut'>
   >;
+  resizeHandleDropTargetOptions?: Parameters<typeof useDropTarget>[0];
   enableAnimation?: boolean;
   width: number;
   unmountOnExit?: boolean;
@@ -56,6 +59,7 @@ const ResizeHandle = ({
   resizeHandlePos,
   resizeHandleOffset,
   resizeHandleVerticalPadding,
+  dropTargetOptions,
   open,
   onOpen,
   onResizing,
@@ -115,6 +119,10 @@ const ResizeHandle = ({
     [maxWidth, resizeHandlePos, minWidth, onWidthChange, onResizing, onOpen]
   );
 
+  const { dropTargetRef } = useDropTarget(dropTargetOptions, [
+    dropTargetOptions,
+  ]);
+
   return (
     <Tooltip
       content={tooltip}
@@ -125,7 +133,10 @@ const ResizeHandle = ({
       <div
         {...rest}
         data-testid="resize-handle"
-        ref={ref}
+        ref={node => {
+          ref.current = node;
+          dropTargetRef.current = node;
+        }}
         style={assignInlineVars({
           [styles.resizeHandleOffsetVar]: `${resizeHandleOffset ?? 0}px`,
           [styles.resizeHandleVerticalPadding]: `${
@@ -169,6 +180,7 @@ export const ResizePanel = forwardRef<HTMLDivElement, ResizePanelProps>(
       resizeHandleTooltipShortcut,
       resizeHandleTooltipShortcutClassName,
       resizeHandleTooltipOptions,
+      resizeHandleDropTargetOptions,
       ...rest
     },
     ref
@@ -213,6 +225,7 @@ export const ResizePanel = forwardRef<HTMLDivElement, ResizePanelProps>(
           onWidthChange={onWidthChange}
           open={open}
           resizing={resizing}
+          dropTargetOptions={resizeHandleDropTargetOptions}
         />
       </div>
     );

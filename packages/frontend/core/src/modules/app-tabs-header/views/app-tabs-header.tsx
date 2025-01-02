@@ -26,6 +26,7 @@ import {
   type MouseEventHandler,
   type ReactNode,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -62,71 +63,24 @@ const tabCanDrop =
     return false;
   };
 
-const WorkbenchTab = ({
+const WorkbenchView = ({
   workbench,
-  active: tabActive,
+  view,
+  activeViewIndex,
   tabsLength,
-  dnd,
-  onDrop,
+  viewIdx,
+  tabActive,
 }: {
   workbench: TabStatus;
-  active: boolean;
+  view: TabStatus['views'][number];
+  activeViewIndex: number;
   tabsLength: number;
+  viewIdx: number;
+  tabActive: boolean;
   dnd?: boolean;
-  onDrop?: (data: DropTargetDropEvent<AffineDNDData>) => void;
 }) => {
-  useServiceOptional(DesktopStateSynchronizer);
   const tabsHeaderService = useService(AppTabsHeaderService);
-  const activeViewIndex = workbench.activeViewIndex ?? 0;
-  const onContextMenu = useAsyncCallback(
-    async (viewIdx: number) => {
-      const action = await tabsHeaderService.showContextMenu?.(
-        workbench.id,
-        viewIdx
-      );
-      switch (action?.type) {
-        case 'open-in-split-view': {
-          track.$.appTabsHeader.$.tabAction({
-            control: 'contextMenu',
-            action: 'openInSplitView',
-          });
-          break;
-        }
-        case 'separate-view': {
-          track.$.appTabsHeader.$.tabAction({
-            control: 'contextMenu',
-            action: 'separateTabs',
-          });
-          break;
-        }
-        case 'pin-tab': {
-          if (action.payload.shouldPin) {
-            track.$.appTabsHeader.$.tabAction({
-              control: 'contextMenu',
-              action: 'pin',
-            });
-          } else {
-            track.$.appTabsHeader.$.tabAction({
-              control: 'contextMenu',
-              action: 'unpin',
-            });
-          }
-          break;
-        }
-        // fixme: when close tab the view may already be gc'ed
-        case 'close-tab': {
-          track.$.appTabsHeader.$.tabAction({
-            control: 'contextMenu',
-            action: 'close',
-          });
-          break;
-        }
-        default:
-          break;
-      }
-    },
-    [tabsHeaderService, workbench.id]
-  );
+
   const onActivateView = useAsyncCallback(
     async (viewIdx: number) => {
       if (viewIdx === activeViewIndex && tabActive) {
@@ -147,6 +101,15 @@ const WorkbenchTab = ({
     },
     [activeViewIndex, tabActive, tabsHeaderService, workbench.id]
   );
+
+  const handleClick: MouseEventHandler = useCatchEventCallback(
+    async e => {
+      e.stopPropagation();
+      onActivateView(viewIdx);
+    },
+    [onActivateView, viewIdx]
+  );
+
   const handleAuxClick: MouseEventHandler = useCatchEventCallback(
     async e => {
       if (e.button === 1) {
@@ -159,6 +122,106 @@ const WorkbenchTab = ({
     },
     [tabsHeaderService, workbench.id]
   );
+
+  const onContextMenu = useAsyncCallback(async () => {
+    const action = await tabsHeaderService.showContextMenu?.(
+      workbench.id,
+      viewIdx
+    );
+    switch (action?.type) {
+      case 'open-in-split-view': {
+        track.$.appTabsHeader.$.tabAction({
+          control: 'contextMenu',
+          action: 'openInSplitView',
+        });
+        break;
+      }
+      case 'separate-view': {
+        track.$.appTabsHeader.$.tabAction({
+          control: 'contextMenu',
+          action: 'separateTabs',
+        });
+        break;
+      }
+      case 'pin-tab': {
+        if (action.payload.shouldPin) {
+          track.$.appTabsHeader.$.tabAction({
+            control: 'contextMenu',
+            action: 'pin',
+          });
+        } else {
+          track.$.appTabsHeader.$.tabAction({
+            control: 'contextMenu',
+            action: 'unpin',
+          });
+        }
+        break;
+      }
+      // fixme: when close tab the view may already be gc'ed
+      case 'close-tab': {
+        track.$.appTabsHeader.$.tabAction({
+          control: 'contextMenu',
+          action: 'close',
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  }, [tabsHeaderService, viewIdx, workbench.id]);
+
+  const contentNode = useMemo(() => {
+    return (
+      <>
+        <div className={styles.labelIcon}>
+          {workbench.ready || !workbench.loaded ? (
+            iconNameToIcon[view.iconName ?? 'allDocs']
+          ) : (
+            <Loading />
+          )}
+        </div>
+        {!view.title ? null : (
+          <div
+            title={view.title}
+            className={styles.splitViewLabelText}
+            data-padding-right={tabsLength > 1 && !workbench.pinned}
+          >
+            {view.title}
+          </div>
+        )}
+      </>
+    );
+  }, [workbench, view, tabsLength]);
+  return (
+    <button
+      data-testid="split-view-label"
+      className={styles.splitViewLabel}
+      data-active={activeViewIndex === viewIdx && tabActive}
+      onContextMenu={onContextMenu}
+      onAuxClick={handleAuxClick}
+      onClick={handleClick}
+    >
+      {contentNode}
+    </button>
+  );
+};
+
+const WorkbenchTab = ({
+  workbench,
+  active: tabActive,
+  tabsLength,
+  dnd,
+  onDrop,
+}: {
+  workbench: TabStatus;
+  active: boolean;
+  tabsLength: number;
+  dnd?: boolean;
+  onDrop?: (data: DropTargetDropEvent<AffineDNDData>) => void;
+}) => {
+  useServiceOptional(DesktopStateSynchronizer);
+  const tabsHeaderService = useService(AppTabsHeaderService);
+  const activeViewIndex = workbench.activeViewIndex ?? 0;
 
   const handleCloseTab = useCatchEventCallback(async () => {
     await tabsHeaderService.closeTab?.(workbench.id);
@@ -175,11 +238,11 @@ const WorkbenchTab = ({
       },
       onDrop,
       dropEffect: 'move',
-      canDrop: tabCanDrop(workbench),
+      canDrop: dnd ? tabCanDrop(workbench) : false,
       isSticky: true,
       allowExternal: true,
     }),
-    [onDrop, workbench]
+    [dnd, onDrop, workbench]
   );
 
   const { dragRef } = useDraggable<AffineDNDData>(() => {
@@ -251,37 +314,15 @@ const WorkbenchTab = ({
         {workbench.views.map((view, viewIdx) => {
           return (
             <Fragment key={view.id}>
-              <button
-                key={view.id}
-                data-testid="split-view-label"
-                className={styles.splitViewLabel}
-                data-active={activeViewIndex === viewIdx && tabActive}
-                onContextMenu={() => {
-                  onContextMenu(viewIdx);
-                }}
-                onAuxClick={handleAuxClick}
-                onClick={e => {
-                  e.stopPropagation();
-                  onActivateView(viewIdx);
-                }}
-              >
-                <div className={styles.labelIcon}>
-                  {workbench.ready || !workbench.loaded ? (
-                    iconNameToIcon[view.iconName ?? 'allDocs']
-                  ) : (
-                    <Loading />
-                  )}
-                </div>
-                {!view.title ? null : (
-                  <div
-                    title={view.title}
-                    className={styles.splitViewLabelText}
-                    data-padding-right={tabsLength > 1 && !workbench.pinned}
-                  >
-                    {view.title}
-                  </div>
-                )}
-              </button>
+              <WorkbenchView
+                workbench={workbench}
+                view={view}
+                activeViewIndex={activeViewIndex}
+                tabsLength={workbench.views.length}
+                viewIdx={viewIdx}
+                tabActive={tabActive}
+                dnd={dnd}
+              />
 
               {viewIdx !== workbench.views.length - 1 ? (
                 <div className={styles.splitViewSeparator} />

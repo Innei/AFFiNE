@@ -84,21 +84,21 @@ export const mainContainerStyle = style({
   selectors: {
     '&[data-client-border="true"]': {
       borderRadius: 6,
-      margin: '8px',
+      padding: '8px',
       overflow: 'clip',
       '@media': {
         print: {
           overflow: 'visible',
-          margin: '0px',
+          padding: '0px',
           borderRadius: '0px',
         },
       },
     },
     '&[data-client-border="true"][data-side-bar-open="true"]': {
-      marginLeft: 0,
+      paddingLeft: 0,
     },
     '&[data-client-border="true"][data-is-desktop="true"]': {
-      marginTop: 0,
+      paddingTop: 0,
     },
     '&[data-client-border="false"][data-is-desktop="true"][data-side-bar-open="true"]':
       {

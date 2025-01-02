@@ -1,3 +1,4 @@
+import { shallowEqual } from '@affine/component';
 import { DocDisplayMetaService } from '@affine/core/modules/doc-display-meta';
 import type { Tag } from '@affine/env/filter';
 import { useI18n } from '@affine/i18n';
@@ -34,7 +35,6 @@ import type {
   TagListItemProps,
   TagMeta,
 } from './types';
-import { shallowEqual } from './utils';
 
 export const ItemGroupHeader = memo(function ItemGroupHeader<
   T extends ListItem,

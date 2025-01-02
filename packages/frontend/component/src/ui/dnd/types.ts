@@ -1,6 +1,8 @@
 import type { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import type { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 
+export type { Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+
 export interface DNDData<
   Draggable extends Record<string, unknown> = Record<string, unknown>,
   DropTarget extends Record<string, unknown> = Record<string, unknown>,

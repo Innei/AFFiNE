@@ -23,6 +23,7 @@ export const menuTrigger = style({
   height: 0,
   pointerEvents: 'none',
 });
+
 export const indicator = style({
   width: 29,
   height: 15,
@@ -48,7 +49,7 @@ export const indicatorInner = style({
   transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
 
   selectors: {
-    '[data-is-dragging="true"] &': {
+    '[data-is-dragging="true"] &, &:active': {
       width: 24,
       height: 2,
     },

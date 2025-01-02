@@ -93,7 +93,6 @@ export const showTabContextMenu = async (tabId: string, viewIndex: number) => {
   ];
   const menu = Menu.buildFromTemplate(template);
   menu.popup();
-  // eslint-disable-next-line prefer-const
   let unsub: (() => void) | undefined;
   const subscription = WebContentViewsManager.instance.tabAction$.subscribe(
     action => {

@@ -28,12 +28,9 @@ export class DesktopStateSynchronizer extends Service {
         event.type === 'open-in-split-view' &&
         event.payload.tabId === appInfo?.viewId
       ) {
-        const to =
-          event.payload.view?.path ??
-          workbench.activeView$.value?.location$.value;
-
-        workbench.open(to, {
+        workbench.openAll({
           at: 'beside',
+          show: false,
         });
       }
 

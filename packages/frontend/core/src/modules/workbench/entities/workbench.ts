@@ -47,21 +47,44 @@ export class Workbench extends Entity {
     return views.at(activeIndex) || views[0];
   });
 
+  resizingView$ = new LiveData<{
+    view: View;
+    index: number;
+  } | null>(null);
+
+  draggingView$ = new LiveData<{
+    view: View;
+    index: number;
+  } | null>(null);
+
+  draggingOver$ = new LiveData<{
+    view: View;
+    index: number;
+  } | null>(null);
+
   location$ = LiveData.computed(get => {
     return get(get(this.activeView$).location$);
   });
   sidebarOpen$ = new LiveData(false);
 
-  active(index: number) {
-    index = Math.max(0, Math.min(index, this.views$.value.length - 1));
-    this.activeViewIndex$.next(index);
+  active(index: number | View) {
+    if (typeof index === 'number') {
+      index = Math.max(0, Math.min(index, this.views$.value.length - 1));
+      this.activeViewIndex$.next(index);
+    } else {
+      this.activeViewIndex$.next(this.views$.value.indexOf(index));
+    }
   }
 
   updateBasename(basename: string) {
     this.basename$.next(basename);
   }
 
-  createView(at: WorkbenchPosition = 'beside', defaultLocation: To) {
+  createView(
+    at: WorkbenchPosition = 'beside',
+    defaultLocation: To,
+    show = true
+  ) {
     const view = this.framework.createEntity(View, {
       id: nanoid(),
       defaultLocation,
@@ -70,7 +93,9 @@ export class Workbench extends Entity {
     newViews.splice(this.indexAt(at), 0, view);
     this.views$.next(newViews);
     const index = newViews.indexOf(view);
-    this.active(index);
+    if (show) {
+      this.active(index);
+    }
     return index;
   }
 
@@ -95,7 +120,7 @@ export class Workbench extends Entity {
       const { at = 'active', replaceHistory = false } = option;
       let view = this.viewAt(at);
       if (!view) {
-        const newIndex = this.createView(at, to);
+        const newIndex = this.createView(at, to, option.show);
         view = this.viewAt(newIndex);
         if (!view) {
           throw new Unreachable();

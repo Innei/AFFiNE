@@ -1,26 +1,20 @@
+import { useDndMonitor } from '@affine/component';
 import { useAppSettingHelper } from '@affine/core/components/hooks/affine/use-app-setting-helper';
-import type { DragEndEvent } from '@dnd-kit/core';
+import { DesktopApiService } from '@affine/core/modules/desktop-api';
+import { FeatureFlagService } from '@affine/core/modules/feature-flag';
+import type { AffineDNDData } from '@affine/core/types/dnd';
 import {
-  closestCenter,
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-} from '@dnd-kit/sortable';
-import { useService } from '@toeverything/infra';
+  useLiveData,
+  useService,
+  useServiceOptional,
+} from '@toeverything/infra';
 import clsx from 'clsx';
-import type { HTMLAttributes, RefObject } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import type { HTMLAttributes } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import type { View } from '../../entities/view';
 import { WorkbenchService } from '../../services/workbench';
 import { SplitViewPanel } from './panel';
-import { ResizeHandle } from './resize-handle';
 import * as styles from './split-view.css';
 
 export interface SplitViewProps extends HTMLAttributes<HTMLDivElement> {
@@ -30,12 +24,10 @@ export interface SplitViewProps extends HTMLAttributes<HTMLDivElement> {
    */
   orientation?: 'horizontal' | 'vertical';
   views: View[];
-  renderer: (item: View, index: number) => React.ReactNode;
+  renderer: (item: View) => React.ReactNode;
   onMove?: (from: number, to: number) => void;
 }
 
-type SlotsMap = Record<View['id'], RefObject<HTMLDivElement | null>>;
-// TODO(@catsjuice): vertical orientation support
 export const SplitView = ({
   orientation = 'horizontal',
   className,
@@ -45,29 +37,29 @@ export const SplitView = ({
   ...attrs
 }: SplitViewProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const [slots, setSlots] = useState<SlotsMap>({});
-  const [resizingViewId, setResizingViewId] = useState<View['id'] | null>(null);
   const { appSettings } = useAppSettingHelper();
   const workbench = useService(WorkbenchService).workbench;
+  const electronApi = useServiceOptional(DesktopApiService);
+  const featureFlagService = useService(FeatureFlagService);
 
-  // blocksuite's lit host element has an issue on remounting.
-  // Add a workaround here to force remounting after dropping.
-  const [visible, setVisibility] = useState(true);
+  // workaround: blocksuite's lit host element has an issue on remounting.
+  // we do not want the view to change its render ordering here after reordering
+  // instead we use a local state to store the views + its order to avoid remounting
+  const [localViewsState, setLocalViewsState] = useState<View[]>(views);
 
-  const sensors = useSensors(
-    useSensor(
-      PointerSensor,
-      useMemo(
-        /* avoid re-rendering */
-        () => ({
-          activationConstraint: {
-            distance: 0,
-          },
-        }),
-        []
-      )
-    )
-  );
+  useLayoutEffect(() => {
+    setLocalViewsState(oldViews => {
+      let newViews = oldViews.filter(v => views.includes(v));
+
+      for (const view of views) {
+        if (!newViews.includes(view)) {
+          newViews.push(view);
+        }
+      }
+
+      return newViews;
+    });
+  }, [views]);
 
   const onResizing = useCallback(
     (index: number, { x, y }: { x: number; y: number }) => {
@@ -85,45 +77,78 @@ export const SplitView = ({
     [orientation, workbench]
   );
 
-  const resizeHandleRenderer = useCallback(
-    (view: View, index: number) =>
-      index < views.length - 1 ? (
-        <ResizeHandle
-          resizing={resizingViewId === view.id}
-          onResizeStart={() => setResizingViewId(view.id)}
-          onResizeEnd={() => setResizingViewId(null)}
-          onResizing={dxy => onResizing(index, dxy)}
-        />
-      ) : null,
-    [onResizing, resizingViewId, views.length]
-  );
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (active.id !== over?.id) {
-        // update order
-        const fromIndex = views.findIndex(v => v.id === active.id);
-        const toIndex = views.findIndex(v => v.id === over?.id);
-        onMove?.(fromIndex, toIndex);
-        setVisibility(false);
-      }
+  const handleOnMove = useCallback(
+    (from: number, to: number) => {
+      onMove?.(from, to);
     },
-    [onMove, views]
+    [onMove]
   );
 
-  useEffect(() => {
-    if (!visible) {
-      const timeoutId = setTimeout(() => {
-        setVisibility(true);
-      }, 0);
+  const enableMultiView = useLiveData(
+    featureFlagService.flags.enable_multi_view.$
+  );
 
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }
-    return;
-  }, [visible]);
+  const [draggingDoc, setDraggingDoc] = useState(false);
+
+  useDndMonitor<AffineDNDData>(() => {
+    return {
+      // todo(@pengx17): external data for monitor is not supported yet
+      // allowExternal: true,
+      onDragStart(data) {
+        if (
+          enableMultiView &&
+          data.source.data?.entity?.type === 'doc' &&
+          !(
+            data.source.data?.from?.at === 'app-header:tabs' &&
+            data.source.data?.from?.tabId === electronApi?.appInfo.viewId
+          )
+        ) {
+          setDraggingDoc(true);
+        }
+      },
+      onDrop(data) {
+        if (!enableMultiView) {
+          return;
+        }
+
+        setDraggingDoc(false);
+        if (!data.source.data.entity) {
+          return;
+        }
+
+        const candidate = data.location.current.dropTargets.find(
+          target => target.data.at === 'workbench:resize-handle'
+        );
+        if (!candidate) {
+          return;
+        }
+
+        const from = candidate.data as AffineDNDData['draggable']['from'];
+
+        if (from?.at === 'workbench:resize-handle') {
+          const { position, viewId } = from;
+          const index = views.findIndex(v => v.id === viewId);
+          const at = (() => {
+            if (position === 'left') {
+              if (index === 0) {
+                return 'head';
+              }
+              return index - 1;
+            } else if (position === 'right') {
+              if (index === views.length - 1) {
+                return 'tail';
+              }
+              return index + 1;
+            } else {
+              return 'tail';
+            }
+          })();
+          const to = `/${data.source.data.entity.id}`;
+          workbench.createView(at, to);
+        }
+      },
+    };
+  }, []);
 
   return (
     <div
@@ -133,29 +158,19 @@ export const SplitView = ({
       data-client-border={appSettings.clientBorder}
       {...attrs}
     >
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={views} strategy={horizontalListSortingStrategy}>
-          {views.map((view, index) =>
-            visible ? (
-              <SplitViewPanel view={view} key={view.id} setSlots={setSlots}>
-                {resizeHandleRenderer(view, index)}
-              </SplitViewPanel>
-            ) : null
-          )}
-        </SortableContext>
-      </DndContext>
-
-      {views.map((view, index) => {
-        const slot = slots[view.id]?.current;
-        if (!slot) return null;
-        return createPortal(
-          renderer(view, index),
-          slot,
-          `portalToSplitViewPanel_${view.id}`
+      {localViewsState.map(view => {
+        const order = views.indexOf(view);
+        return (
+          <SplitViewPanel
+            view={view}
+            index={order}
+            key={view.id}
+            onMove={handleOnMove}
+            onResizing={dxy => onResizing(order, dxy)}
+            draggingDoc={draggingDoc}
+          >
+            {renderer(view)}
+          </SplitViewPanel>
         );
       })}
     </div>

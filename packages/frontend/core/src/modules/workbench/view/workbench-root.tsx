@@ -1,7 +1,9 @@
+import type { DropTargetGetFeedback } from '@affine/component';
 import { ResizePanel } from '@affine/component/resize-panel';
 import { AffineErrorComponent } from '@affine/core/components/affine/affine-error-boundary/affine-error-fallback';
 import { rightSidebarWidthAtom } from '@affine/core/components/atoms';
 import { workbenchRoutes } from '@affine/core/desktop/workbench-router';
+import type { AffineDNDData } from '@affine/core/types/dnd';
 import {
   appSettingAtom,
   FrameworkScope,
@@ -9,7 +11,7 @@ import {
   useService,
 } from '@toeverything/infra';
 import { useAtom, useAtomValue } from 'jotai';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type RouteObject, useLocation } from 'react-router-dom';
 
 import type { View } from '../entities/view';
@@ -48,8 +50,8 @@ export const WorkbenchRoot = memo(() => {
 
   useAdapter(workbench, basename);
 
-  const panelRenderer = useCallback((view: View, index: number) => {
-    return <WorkbenchView key={view.id} view={view} index={index} />;
+  const panelRenderer = useCallback((view: View) => {
+    return <WorkbenchView view={view} />;
   }, []);
 
   const onMove = useCallback(
@@ -78,12 +80,12 @@ export const WorkbenchRoot = memo(() => {
 
 WorkbenchRoot.displayName = 'memo(WorkbenchRoot)';
 
-const WorkbenchView = ({ view, index }: { view: View; index: number }) => {
+const WorkbenchView = ({ view }: { view: View }) => {
   const workbench = useService(WorkbenchService).workbench;
 
   const handleOnFocus = useCallback(() => {
-    workbench.active(index);
-  }, [workbench, index]);
+    workbench.active(view);
+  }, [workbench, view]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -145,9 +147,31 @@ const WorkbenchSidebar = () => {
     };
   }, []);
 
+  const resizeHandleDropTargetOptions = useMemo(() => {
+    return () => ({
+      data: () => {
+        const lastView = workbench.views$.value.at(-1);
+
+        if (!lastView) {
+          return {};
+        }
+
+        return {
+          at: 'workbench:resize-handle',
+          position: 'right', // right of the last view
+          viewId: lastView.id,
+        };
+      },
+      canDrop: (data: DropTargetGetFeedback<AffineDNDData>) => {
+        return data.source.data.entity?.type === 'doc';
+      },
+    });
+  }, [workbench.views$.value]);
+
   return (
     <ResizePanel
       floating={floating}
+      resizeHandleDropTargetOptions={resizeHandleDropTargetOptions}
       resizeHandlePos="left"
       resizeHandleOffset={0}
       width={width}
