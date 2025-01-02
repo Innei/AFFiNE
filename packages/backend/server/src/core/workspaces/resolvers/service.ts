@@ -210,6 +210,6 @@ export class WorkspaceService {
 
   async sendOwnerTransferred(email: string, ws: { id: string }) {
     const workspace = await this.getWorkspaceInfo(ws.id);
-    await this.mailer.sendOwnerTransferred(email, { name: workspace.name });
+    await this.mailer.sendOwnershipTransferred(email, { name: workspace.name });
   }
 }
