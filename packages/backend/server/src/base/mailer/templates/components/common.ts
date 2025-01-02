@@ -21,4 +21,5 @@ export const BasicTextStyle: React.CSSProperties = {
   fontWeight: '400',
   lineHeight: '20px',
   fontFamily: 'Inter, Arial, Helvetica, sans-serif',
+  margin: '24px 0 0',
 };

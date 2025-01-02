@@ -6,7 +6,7 @@ export const ActionButton = (props: EmailTemplateProps) => {
   const { buttonContent, buttonUrl } = props;
   if (buttonContent && buttonUrl) {
     return (
-      <Section style={{ paddingTop: '16px' }}>
+      <Section>
         <Button
           href={buttonUrl}
           style={{

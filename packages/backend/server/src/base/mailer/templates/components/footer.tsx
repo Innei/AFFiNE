@@ -5,6 +5,8 @@ import { BasicTextStyle } from './common';
 const TextStyles: React.CSSProperties = {
   ...BasicTextStyle,
   color: '#8e8d91',
+  margin: 1,
+  marginTop: '8px',
 };
 
 export const Footer = () => {
@@ -19,7 +21,7 @@ export const Footer = () => {
         padding: '24px',
       }}
     >
-      <Section align="center" width="auto">
+      <Section align="center" width="auto" style={{ margin: '1px auto' }}>
         <Row>
           {[
             'Github',
@@ -42,10 +44,8 @@ export const Footer = () => {
         </Row>
       </Section>
       <Section align="center" width="auto">
-        <Row>
-          <td style={TextStyles}>
-            One hyper-fused platform for wildly creative minds
-          </td>
+        <Row style={TextStyles}>
+          <td>One hyper-fused platform for wildly creative minds</td>
         </Row>
       </Section>
       <Section align="center" width="auto">

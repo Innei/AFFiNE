@@ -19,7 +19,7 @@ export const EmailTemplate = (props: EmailTemplateProps) => {
   return (
     <Html>
       <Head />
-      <Body style={{ backgroundColor: '#f6f7fb', padding: '0', margin: '0' }}>
+      <Body style={{ backgroundColor: '#f6f7fb', overflow: 'hidden' }}>
         <Container
           style={{
             backgroundColor: '#fff',

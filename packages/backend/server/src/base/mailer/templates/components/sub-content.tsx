@@ -6,7 +6,7 @@ export const SubContent = (props: EmailTemplateProps) => {
   const { subContent } = props;
   if (subContent) {
     return (
-      <Section style={{ paddingTop: '24px' }}>
+      <Section>
         <Text
           style={{
             ...BasicTextStyle,

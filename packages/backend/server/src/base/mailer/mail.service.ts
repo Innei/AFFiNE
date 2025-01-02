@@ -11,6 +11,7 @@ import {
   getRoleChangedTemplate,
   type RoleChangedMailParams,
 } from './template';
+import { renderSignUpEmail } from './templates';
 
 @Injectable()
 export class MailService {
@@ -112,16 +113,8 @@ export class MailService {
   }
 
   async sendSignUpMail(url: string, options: Options) {
-    const html = emailTemplate({
-      title: 'Create AFFiNE Account',
-      content:
-        'Click the button below to complete your account creation and sign in. This magic link will expire in 30 minutes.',
-      buttonContent: ' Create account and sign in',
-      buttonUrl: url,
-    });
-
     return this.sendMail({
-      html,
+      html: await renderSignUpEmail({ url }),
       subject: 'Your AFFiNE account is waiting for you!',
       ...options,
     });
