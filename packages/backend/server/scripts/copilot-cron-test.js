@@ -80,20 +80,16 @@ function render(markdown) {
   return jsxslack([`<Blocks>${rendered}</Blocks>`]);
 }
 
-async function main() {
-  const { CHANNEL_ID, SLACK_BOT_TOKEN, AFFINE_ENV } = process.env;
+const { CHANNEL_ID, SLACK_BOT_TOKEN, AFFINE_ENV } = process.env;
 
-  const report = await runTest();
-  const blocks = render(
-    [`# AFFiNE Copilot Test ${AFFINE_ENV} Env Test Result`, report].join('\n\n')
-  );
-  const { ok } = await new WebClient(SLACK_BOT_TOKEN).chat.postMessage({
-    channel: CHANNEL_ID,
-    text: `AFFiNE Copilot Test ${AFFINE_ENV} Env Test Result`,
-    blocks,
-  });
+const report = await runTest();
+const blocks = render(
+  [`# AFFiNE Copilot Test ${AFFINE_ENV} Env Test Result`, report].join('\n\n')
+);
+const { ok } = await new WebClient(SLACK_BOT_TOKEN).chat.postMessage({
+  channel: CHANNEL_ID,
+  text: `AFFiNE Copilot Test ${AFFINE_ENV} Env Test Result`,
+  blocks,
+});
 
-  console.assert(ok, 'Failed to send a message to Slack');
-}
-
-await main();
+console.assert(ok, 'Failed to send a message to Slack');
