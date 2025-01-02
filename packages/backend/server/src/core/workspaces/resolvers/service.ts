@@ -131,7 +131,24 @@ export class WorkspaceService {
     return true;
   }
 
-  async sendReviewRequestedMail(inviteId: string) {
+  async sendTeamWorkspaceUpgradedEmail(workspaceId: string) {
+    const workspace = await this.getWorkspaceInfo(workspaceId);
+    const owner = await this.permission.getWorkspaceOwner(workspaceId);
+    const admin = await this.permission.getWorkspaceAdmin(workspaceId);
+
+    await this.mailer.sendTeamWorkspaceUpgradedEmail(owner.email, {
+      ...workspace,
+      isOwner: true,
+    });
+    for (const user of admin) {
+      await this.mailer.sendTeamWorkspaceUpgradedEmail(user.email, {
+        ...workspace,
+        isOwner: false,
+      });
+    }
+  }
+
+  async sendReviewRequestedEmail(inviteId: string) {
     const { workspaceId, inviteeUserId } = await this.getInviteInfo(inviteId);
     if (!inviteeUserId) {
       this.logger.error(`Invitee user not found for inviteId: ${inviteId}`);
@@ -151,7 +168,7 @@ export class WorkspaceService {
     const admin = await this.permission.getWorkspaceAdmin(workspaceId);
 
     for (const user of [owner, ...admin]) {
-      await this.mailer.sendReviewRequestMail(
+      await this.mailer.sendReviewRequestEmail(
         user.email,
         invitee.email,
         workspace
@@ -159,7 +176,7 @@ export class WorkspaceService {
     }
   }
 
-  async sendInviteMail(inviteId: string) {
+  async sendInviteEmail(inviteId: string) {
     const target = await this.getInviteeEmailTarget(inviteId);
 
     if (!target) {
@@ -208,8 +225,10 @@ export class WorkspaceService {
     });
   }
 
-  async sendOwnerTransferred(email: string, ws: { id: string }) {
+  async sendOwnerTransferredEmail(email: string, ws: { id: string }) {
     const workspace = await this.getWorkspaceInfo(ws.id);
-    await this.mailer.sendOwnershipTransferred(email, { name: workspace.name });
+    await this.mailer.sendOwnershipTransferredEmail(email, {
+      name: workspace.name,
+    });
   }
 }

@@ -276,7 +276,7 @@ export class MailService {
   }
 
   // =================== Team Workspace Mails ===================
-  async sendTeamWorkspaceUpgradedToOwner(
+  async sendTeamWorkspaceUpgradedEmail(
     to: string,
     ws: { id: string; name: string; isOwner: boolean }
   ) {
@@ -308,7 +308,7 @@ export class MailService {
     return this.sendMail({ to, subject: baseContent.subject, html });
   }
 
-  async sendReviewRequestMail(
+  async sendReviewRequestEmail(
     to: string,
     invitee: string,
     ws: { id: string; name: string }
@@ -356,7 +356,7 @@ export class MailService {
     return this.sendMail({ to, subject, html });
   }
 
-  async sendOwnershipTransferred(to: string, ws: { name: string }) {
+  async sendOwnershipTransferredEmail(to: string, ws: { name: string }) {
     const { name: workspaceName } = ws;
     const title = `Your ownership of ${workspaceName} has been transferred`;
 

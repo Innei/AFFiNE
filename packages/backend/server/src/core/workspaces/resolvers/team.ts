@@ -124,7 +124,7 @@ export class TeamWorkspaceResolver {
         // after user click the invite link, we can check again and reject if charge failed
         if (sendInviteMail) {
           try {
-            await this.workspaceService.sendInviteMail(ret.inviteId);
+            await this.workspaceService.sendInviteEmail(ret.inviteId);
             ret.sentSuccess = true;
           } catch (e) {
             this.logger.warn(
@@ -344,7 +344,7 @@ export class TeamWorkspaceResolver {
     inviteId,
   }: EventPayload<'workspace.members.reviewRequested'>) {
     // send review request mail to owner and admin
-    await this.workspaceService.sendReviewRequestedMail(inviteId);
+    await this.workspaceService.sendReviewRequestedEmail(inviteId);
   }
 
   @OnEvent('workspace.members.requestDeclined')
@@ -388,7 +388,7 @@ export class TeamWorkspaceResolver {
     workspaceId,
   }: EventPayload<'workspace.members.ownerTransferred'>) {
     // send role changed mail
-    await this.workspaceService.sendOwnerTransferred(email, {
+    await this.workspaceService.sendOwnerTransferredEmail(email, {
       id: workspaceId,
     });
   }
