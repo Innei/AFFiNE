@@ -5,6 +5,7 @@ import { FeatureModule } from '../../core/features';
 import { PermissionModule } from '../../core/permission';
 import { QuotaModule } from '../../core/quota';
 import { UserModule } from '../../core/user';
+import { WorkspaceModule } from '../../core/workspaces';
 import { Plugin } from '../registry';
 import { StripeWebhookController } from './controller';
 import { SubscriptionCronJobs } from './cron';
@@ -24,7 +25,13 @@ import { StripeWebhook } from './webhook';
 
 @Plugin({
   name: 'payment',
-  imports: [FeatureModule, QuotaModule, UserModule, PermissionModule],
+  imports: [
+    FeatureModule,
+    QuotaModule,
+    UserModule,
+    PermissionModule,
+    WorkspaceModule,
+  ],
   providers: [
     StripeProvider,
     SubscriptionService,

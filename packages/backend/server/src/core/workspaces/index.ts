@@ -38,6 +38,7 @@ import {
     WorkspaceBlobResolver,
     WorkspaceService,
   ],
+  exports: [WorkspaceService],
 })
 export class WorkspaceModule {}
 

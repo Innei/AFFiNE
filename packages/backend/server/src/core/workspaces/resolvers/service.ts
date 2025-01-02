@@ -2,7 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { getStreamAsBuffer } from 'get-stream';
 
-import { Cache, MailService, UserNotFound } from '../../../base';
+import {
+  Cache,
+  type EventPayload,
+  MailService,
+  OnEvent,
+  UserNotFound,
+} from '../../../base';
 import { DocContentService } from '../../doc-renderer';
 import { Permission, PermissionService } from '../../permission';
 import { WorkspaceBlobStorage } from '../../storage';
@@ -230,5 +236,22 @@ export class WorkspaceService {
     await this.mailer.sendOwnershipTransferredEmail(email, {
       name: workspace.name,
     });
+  }
+
+  async sendMemberRemoved(email: string, ws: { id: string }) {
+    const workspace = await this.getWorkspaceInfo(ws.id);
+    await this.mailer.sendMemberRemovedEmail(email, {
+      name: workspace.name,
+    });
+  }
+
+  @OnEvent('workspace.members.removed')
+  async onMemberRemoved({
+    userId,
+    workspaceId,
+  }: EventPayload<'workspace.members.requestDeclined'>) {
+    const user = await this.user.findUserById(userId);
+    if (!user) return;
+    await this.sendMemberRemoved(user.email, { id: workspaceId });
   }
 }

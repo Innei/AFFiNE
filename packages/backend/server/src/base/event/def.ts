@@ -17,6 +17,7 @@ export interface WorkspaceEvents {
     }>;
     ownerTransferred: Payload<{ email: string; workspaceId: Workspace['id'] }>;
     updated: Payload<{ workspaceId: Workspace['id']; count: number }>;
+    removed: Payload<{ workspaceId: Workspace['id']; userId: User['id'] }>;
   };
   deleted: Payload<Workspace['id']>;
   blob: {

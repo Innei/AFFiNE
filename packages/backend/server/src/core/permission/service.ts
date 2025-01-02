@@ -460,6 +460,10 @@ export class PermissionService {
       workspaceId,
       count,
     });
+    this.event.emit('workspace.members.removed', {
+      workspaceId,
+      userId: user,
+    });
 
     if (
       permission.status === 'UnderReview' ||

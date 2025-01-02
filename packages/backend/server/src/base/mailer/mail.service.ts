@@ -367,20 +367,7 @@ export class MailService {
     return this.sendMail({ to, subject: title, html });
   }
 
-  async sendOwnershipReceived(to: string, ws: { id: string; name: string }) {
-    const { id: workspaceId, name: workspaceName } = ws;
-    const title = `You are now the owner of ${workspaceName}`;
-
-    const html = emailTemplate({
-      title: 'Welcome, new workspace owner!',
-      content: `You have been assigned as the owner of ${workspaceName}. As a workspace owner, you have full control over this team workspace.`,
-      buttonContent: 'Open Workspace',
-      buttonUrl: this.url.link(`/workspace/${workspaceId}`),
-    });
-    return this.sendMail({ to, subject: title, html });
-  }
-
-  async sendMemberRemoved(to: string, ws: { name: string }) {
+  async sendMemberRemovedEmail(to: string, ws: { name: string }) {
     const { name: workspaceName } = ws;
     const title = `You have been removed from ${workspaceName}`;
 
@@ -391,7 +378,7 @@ export class MailService {
     return this.sendMail({ to, subject: title, html });
   }
 
-  async sendWorkspaceExpireRemind(
+  async sendWorkspaceExpireRemindEmail(
     to: string,
     ws: {
       id: string;
