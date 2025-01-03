@@ -68,11 +68,11 @@ export const CloudQuotaModal = () => {
   }, [userQuota, isOwner, workspaceQuota, t]);
 
   const onAbortLargeBlob = useAsyncCallback(
-    async (blob: Blob) => {
+    async (byteSize: number) => {
       // wait for quota revalidation
       await workspaceQuotaService.quota.waitForRevalidation();
       if (
-        blob.size > (workspaceQuotaService.quota.quota$.value?.blobLimit ?? 0)
+        byteSize > (workspaceQuotaService.quota.quota$.value?.blobLimit ?? 0)
       ) {
         setOpen(true);
       }
@@ -85,10 +85,10 @@ export const CloudQuotaModal = () => {
       return;
     }
 
-    currentWorkspace.engine.blob.singleBlobSizeLimit = workspaceQuota.blobLimit;
+    currentWorkspace.engine.blob.setMaxBlobSize(workspaceQuota.blobLimit);
 
     const disposable =
-      currentWorkspace.engine.blob.onAbortLargeBlob(onAbortLargeBlob);
+      currentWorkspace.engine.blob.onReachedMaxBlobSize(onAbortLargeBlob);
     return () => {
       disposable();
     };

@@ -68,8 +68,8 @@ export class Doc extends Entity {
     return this.store.waitForDocLoadReady(this.id);
   }
 
-  setPriorityLoad(priority: number) {
-    return this.store.setPriorityLoad(this.id, priority);
+  addPriorityLoad(priority: number) {
+    return this.store.addPriorityLoad(this.id, priority);
   }
 
   changeDocTitle(newTitle: string) {

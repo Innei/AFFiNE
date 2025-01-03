@@ -9,9 +9,10 @@ import { validateAndReduceImage } from '@affine/core/utils/reduce-image';
 import { UNTITLED_WORKSPACE_NAME } from '@affine/env/constant';
 import { useI18n } from '@affine/i18n';
 import { CameraIcon } from '@blocksuite/icons/rc';
-import { useLiveData, useService } from '@toeverything/infra';
+import { LiveData, useLiveData, useService } from '@toeverything/infra';
 import type { KeyboardEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import { map } from 'rxjs';
 
 import * as style from './style.css';
 
@@ -24,7 +25,14 @@ export const ProfilePanel = () => {
   useEffect(() => {
     permissionService.permission.revalidate();
   }, [permissionService]);
-  const workspaceIsReady = useLiveData(workspace?.engine.rootDocState$)?.ready;
+  const workspaceIsReady = useLiveData(
+    workspace
+      ? LiveData.from(
+          workspace.engine.doc.docState$(workspace.id).pipe(map(v => v.ready)),
+          false
+        )
+      : null
+  );
 
   const [name, setName] = useState('');
 

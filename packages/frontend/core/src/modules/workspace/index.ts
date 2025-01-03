@@ -4,10 +4,10 @@ export { WorkspaceEngineBeforeStart, WorkspaceInitialized } from './events';
 export { getAFFiNEWorkspaceSchema } from './global-schema';
 export type { WorkspaceMetadata } from './metadata';
 export type { WorkspaceOpenOptions } from './open-options';
-export type { WorkspaceEngineProvider } from './providers/flavour';
 export type { WorkspaceFlavourProvider } from './providers/flavour';
 export { WorkspaceFlavoursProvider } from './providers/flavour';
 export { WorkspaceLocalCache, WorkspaceLocalState } from './providers/storage';
+export { WorkspaceEngineWorkerProvider } from './providers/worker';
 export { WorkspaceScope } from './scopes/workspace';
 export { WorkspaceService } from './services/workspace';
 export { WorkspacesService } from './services/workspaces';
@@ -25,6 +25,7 @@ import {
 } from './impls/storage';
 import { WorkspaceFlavoursProvider } from './providers/flavour';
 import { WorkspaceLocalCache, WorkspaceLocalState } from './providers/storage';
+import { WorkspaceEngineWorkerProvider } from './providers/worker';
 import { WorkspaceScope } from './scopes/workspace';
 import { WorkspaceDestroyService } from './services/destroy';
 import { WorkspaceEngineService } from './services/engine';
@@ -73,7 +74,7 @@ export function configureWorkspaceModule(framework: Framework) {
     .service(WorkspaceService)
     .entity(Workspace, [WorkspaceScope])
     .service(WorkspaceEngineService, [WorkspaceScope])
-    .entity(WorkspaceEngine, [WorkspaceService])
+    .entity(WorkspaceEngine, [WorkspaceService, WorkspaceEngineWorkerProvider])
     .impl(WorkspaceLocalState, WorkspaceLocalStateImpl, [
       WorkspaceService,
       GlobalState,

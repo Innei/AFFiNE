@@ -1,9 +1,6 @@
 import { WorkspaceAIOnboarding } from '@affine/core/components/affine/ai-onboarding';
 import { AiLoginRequiredModal } from '@affine/core/components/affine/auth/ai-login-required';
-import {
-  CloudQuotaModal,
-  LocalQuotaModal,
-} from '@affine/core/components/affine/quota-reached-modal';
+import { CloudQuotaModal } from '@affine/core/components/affine/quota-reached-modal';
 import { SWRConfigProvider } from '@affine/core/components/providers/swr-config-provider';
 import { WorkspaceSideEffects } from '@affine/core/components/providers/workspace-side-effects';
 import { AIIsland } from '@affine/core/desktop/components/ai-island';
@@ -25,14 +22,12 @@ export const WorkspaceLayout = function WorkspaceLayout({
       <WorkspaceDialogs />
 
       {/* ---- some side-effect components ---- */}
-      {currentWorkspace?.flavour === 'local' ? (
-        <LocalQuotaModal />
-      ) : (
+      {currentWorkspace?.flavour !== 'local' ? (
         <>
           <CloudQuotaModal />
           <QuotaCheck workspaceMeta={currentWorkspace.meta} />
         </>
-      )}
+      ) : null}
       <AiLoginRequiredModal />
       <WorkspaceSideEffects />
       <PeekViewManagerModal />

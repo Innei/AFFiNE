@@ -1,6 +1,6 @@
+import type { DocStorage } from '@affine/nbstore';
 import {
   createORMClient,
-  type DocStorage,
   ObjectPool,
   Service,
   YjsDBAdapter,
@@ -45,7 +45,7 @@ export class WorkspaceDBService extends Service {
                 guid: `db$${this.workspaceService.workspace.id}$${guid}`,
               });
               this.workspaceService.workspace.engine.doc.addDoc(ydoc, false);
-              this.workspaceService.workspace.engine.doc.setPriority(
+              this.workspaceService.workspace.engine.doc.addPriority(
                 ydoc.guid,
                 50
               );
@@ -78,7 +78,7 @@ export class WorkspaceDBService extends Service {
                 guid: `userdata$${userId}$${this.workspaceService.workspace.id}$${guid}`,
               });
               this.workspaceService.workspace.engine.doc.addDoc(ydoc, false);
-              this.workspaceService.workspace.engine.doc.setPriority(
+              this.workspaceService.workspace.engine.doc.addPriority(
                 ydoc.guid,
                 50
               );
@@ -110,19 +110,25 @@ export async function transformWorkspaceDBLocalToCloud(
 ) {
   for (const tableName of Object.keys(AFFiNE_WORKSPACE_DB_SCHEMA)) {
     const localDocName = `db$${localWorkspaceId}$${tableName}`;
-    const localDoc = await localDocStorage.doc.get(localDocName);
+    const localDoc = await localDocStorage.getDoc(localDocName);
     if (localDoc) {
       const cloudDocName = `db$${cloudWorkspaceId}$${tableName}`;
-      await cloudDocStorage.doc.set(cloudDocName, localDoc);
+      await cloudDocStorage.pushDocUpdate({
+        docId: cloudDocName,
+        bin: localDoc.bin,
+      });
     }
   }
 
   for (const tableName of Object.keys(AFFiNE_WORKSPACE_USERDATA_DB_SCHEMA)) {
     const localDocName = `userdata$__local__$${localWorkspaceId}$${tableName}`;
-    const localDoc = await localDocStorage.doc.get(localDocName);
+    const localDoc = await localDocStorage.getDoc(localDocName);
     if (localDoc) {
       const cloudDocName = `userdata$${accountId}$${cloudWorkspaceId}$${tableName}`;
-      await cloudDocStorage.doc.set(cloudDocName, localDoc);
+      await cloudDocStorage.pushDocUpdate({
+        docId: cloudDocName,
+        bin: localDoc.bin,
+      });
     }
   }
 }

@@ -20,11 +20,11 @@ import {
   TeamWorkspaceIcon,
   UnsyncIcon,
 } from '@blocksuite/icons/rc';
-import { useLiveData } from '@toeverything/infra';
+import { LiveData, useLiveData } from '@toeverything/infra';
 import { cssVar } from '@toeverything/theme';
 import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
-import { forwardRef, useCallback, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCatchEventCallback } from '../../hooks/use-catch-event-hook';
 import { WorkspaceAvatar } from '../../workspace-avatar';
@@ -85,7 +85,11 @@ const useSyncEngineSyncProgress = (meta: WorkspaceMetadata) => {
   const workspace = useWorkspace(meta);
 
   const engineState = useLiveData(
-    workspace?.engine.docEngineState$.throttleTime(100)
+    useMemo(() => {
+      return workspace
+        ? LiveData.from(workspace.engine.doc.state$, null).throttleTime(100)
+        : null;
+    }, [workspace])
   );
 
   if (!engineState || !workspace) {
@@ -94,7 +98,7 @@ const useSyncEngineSyncProgress = (meta: WorkspaceMetadata) => {
 
   const progress =
     (engineState.total - engineState.syncing) / engineState.total;
-  const syncing = engineState.syncing > 0 || engineState.retrying;
+  const syncing = engineState.syncing > 0 || engineState.syncRetrying;
 
   let content;
   // TODO(@eyhn): add i18n
@@ -106,9 +110,9 @@ const useSyncEngineSyncProgress = (meta: WorkspaceMetadata) => {
     }
   } else if (!isOnline) {
     content = 'Disconnected, please check your network connection';
-  } else if (engineState.retrying && engineState.errorMessage) {
-    content = `${engineState.errorMessage}, reconnecting.`;
-  } else if (engineState.retrying) {
+  } else if (engineState.syncRetrying && engineState.syncErrorMessage) {
+    content = `${engineState.syncErrorMessage}, reconnecting.`;
+  } else if (engineState.syncRetrying) {
     content = 'Sync disconnected due to unexpected issues, reconnecting.';
   } else if (syncing) {
     content =
@@ -123,7 +127,7 @@ const useSyncEngineSyncProgress = (meta: WorkspaceMetadata) => {
       return SyncingWorkspaceStatus({
         progress: progress ? Math.max(progress, 0.2) : undefined,
       });
-    } else if (engineState.retrying) {
+    } else if (engineState.syncRetrying) {
       return UnSyncWorkspaceStatus();
     } else {
       return CloudWorkspaceStatus();
@@ -145,7 +149,7 @@ const useSyncEngineSyncProgress = (meta: WorkspaceMetadata) => {
     progress,
     active:
       workspace.flavour !== 'local' &&
-      ((syncing && progress !== undefined) || engineState.retrying), // active if syncing or retrying,
+      ((syncing && progress !== undefined) || engineState.syncRetrying), // active if syncing or retrying,
   };
 };
 

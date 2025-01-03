@@ -1,9 +1,6 @@
 import { AffineErrorBoundary } from '@affine/core/components/affine/affine-error-boundary';
 import { AiLoginRequiredModal } from '@affine/core/components/affine/auth/ai-login-required';
-import {
-  CloudQuotaModal,
-  LocalQuotaModal,
-} from '@affine/core/components/affine/quota-reached-modal';
+import { CloudQuotaModal } from '@affine/core/components/affine/quota-reached-modal';
 import { SWRConfigProvider } from '@affine/core/components/providers/swr-config-provider';
 import { WorkspaceSideEffects } from '@affine/core/components/providers/workspace-side-effects';
 import {
@@ -17,13 +14,20 @@ import type {
   WorkspaceMetadata,
 } from '@affine/core/modules/workspace';
 import { WorkspacesService } from '@affine/core/modules/workspace';
-import { FrameworkScope, useLiveData, useServices } from '@toeverything/infra';
+import {
+  FrameworkScope,
+  LiveData,
+  useLiveData,
+  useServices,
+} from '@toeverything/infra';
 import {
   type PropsWithChildren,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState,
 } from 'react';
+import { map } from 'rxjs';
 
 import { AppFallback } from '../../components/app-fallback';
 import { WorkspaceDialogs } from '../../dialogs';
@@ -33,11 +37,11 @@ declare global {
   /**
    * @internal debug only
    */
-  // eslint-disable-next-line no-var
+  // oxlint-disable-next-line no-var
   var currentWorkspace: Workspace | undefined;
-  // eslint-disable-next-line no-var
+  // oxlint-disable-next-line no-var
   var exportWorkspaceSnapshot: (docs?: string[]) => Promise<void>;
-  // eslint-disable-next-line no-var
+  // oxlint-disable-next-line no-var
   var importWorkspaceSnapshot: () => Promise<void>;
   interface WindowEventMap {
     'affine:workspace:change': CustomEvent<{ id: string }>;
@@ -106,7 +110,20 @@ export const WorkspaceLayout = ({
   ]);
 
   const isRootDocReady =
-    useLiveData(workspace?.engine.rootDocState$.map(v => v.ready)) ?? false;
+    useLiveData(
+      useMemo(
+        () =>
+          workspace
+            ? LiveData.from(
+                workspace.engine.doc
+                  .docState$(workspace.id)
+                  .pipe(map(v => v.ready)),
+                false
+              )
+            : null,
+        [workspace]
+      )
+    ) ?? false;
 
   if (!workspace) {
     return null; // skip this, workspace will be set in layout effect
@@ -125,11 +142,7 @@ export const WorkspaceLayout = ({
 
             {/* ---- some side-effect components ---- */}
             <PeekViewManagerModal />
-            {workspace?.flavour === 'local' ? (
-              <LocalQuotaModal />
-            ) : (
-              <CloudQuotaModal />
-            )}
+            {workspace?.flavour !== 'local' ? <CloudQuotaModal /> : null}
             <AiLoginRequiredModal />
             <WorkspaceSideEffects />
             {children}

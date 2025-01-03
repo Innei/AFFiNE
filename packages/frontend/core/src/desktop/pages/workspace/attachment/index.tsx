@@ -33,7 +33,7 @@ const useLoadAttachment = (pageId: string, attachmentId: string) => {
     if (!doc.blockSuiteDoc.ready) {
       doc.blockSuiteDoc.load();
     }
-    doc.setPriorityLoad(10);
+    const dispose = doc.addPriorityLoad(10);
 
     doc
       .waitForSyncReady()
@@ -47,6 +47,7 @@ const useLoadAttachment = (pageId: string, attachmentId: string) => {
 
     return () => {
       release();
+      dispose();
     };
   }, [docRecord, docsService, pageId, attachmentId]);
 

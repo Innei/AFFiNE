@@ -106,7 +106,6 @@ export class DocsService extends Service {
   ) {
     const doc = this.store.createBlockSuiteDoc();
     initDocFromProps(doc, options.docProps);
-    this.store.markDocSyncStateAsReady(doc.id);
     const docRecord = this.list.doc$(doc.id).value;
     if (!docRecord) {
       throw new Unreachable();
@@ -120,8 +119,9 @@ export class DocsService extends Service {
 
   async addLinkedDoc(targetDocId: string, linkedDocId: string) {
     const { doc, release } = this.open(targetDocId);
-    doc.setPriorityLoad(10);
+    const disposePriorityLoad = doc.addPriorityLoad(10);
     await doc.waitForSyncReady();
+    disposePriorityLoad();
     const text = new Text([
       {
         insert: ' ',
@@ -145,8 +145,9 @@ export class DocsService extends Service {
 
   async changeDocTitle(docId: string, newTitle: string) {
     const { doc, release } = this.open(docId);
-    doc.setPriorityLoad(10);
+    const disposePriorityLoad = doc.addPriorityLoad(10);
     await doc.waitForSyncReady();
+    disposePriorityLoad();
     doc.changeDocTitle(newTitle);
     release();
   }

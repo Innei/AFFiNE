@@ -1,83 +1,65 @@
-import {
-  AwarenessEngine,
-  BlobEngine,
-  DocEngine,
-  Entity,
-  throwIfAborted,
-} from '@toeverything/infra';
-import type { Doc as YDoc } from 'yjs';
+import type {
+  WorkerClient,
+  WorkerInitOptions,
+} from '@affine/nbstore/worker/client';
+import { Entity } from '@toeverything/infra';
 
 import { WorkspaceEngineBeforeStart } from '../events';
-import type { WorkspaceEngineProvider } from '../providers/flavour';
+import type { WorkspaceEngineWorkerProvider } from '../providers/worker';
 import type { WorkspaceService } from '../services/workspace';
 
 export class WorkspaceEngine extends Entity<{
-  engineProvider: WorkspaceEngineProvider;
+  engineWorkerInitOptions: WorkerInitOptions;
 }> {
-  doc = new DocEngine(
-    this.props.engineProvider.getDocStorage(),
-    this.props.engineProvider.getDocServer()
-  );
+  worker?: WorkerClient;
+  started = false;
 
-  blob = new BlobEngine(
-    this.props.engineProvider.getLocalBlobStorage(),
-    this.props.engineProvider.getRemoteBlobStorages()
-  );
-
-  awareness = new AwarenessEngine(
-    this.props.engineProvider.getAwarenessConnections()
-  );
-
-  constructor(private readonly workspaceService: WorkspaceService) {
+  constructor(
+    private readonly workspaceService: WorkspaceService,
+    private readonly workerProvider: WorkspaceEngineWorkerProvider
+  ) {
     super();
   }
 
-  setRootDoc(yDoc: YDoc) {
-    this.doc.setPriority(yDoc.guid, 100);
-    this.doc.addDoc(yDoc);
+  get doc() {
+    if (!this.worker) {
+      throw new Error('Engine is not initialized');
+    }
+    return this.worker.docFrontend;
+  }
+
+  get blob() {
+    if (!this.worker) {
+      throw new Error('Engine is not initialized');
+    }
+    return this.worker.blobFrontend;
+  }
+
+  get awareness() {
+    if (!this.worker) {
+      throw new Error('Engine is not initialized');
+    }
+    return this.worker.awarenessFrontend;
   }
 
   start() {
-    this.eventBus.emit(WorkspaceEngineBeforeStart, this);
-    this.doc.start();
-    this.awareness.connect(this.workspaceService.workspace.awareness);
-    if (!BUILD_CONFIG.isMobileEdition) {
-      // currently, blob synchronization consumes a lot of memory and is temporarily disabled on mobile devices.
-      this.blob.start();
+    if (this.started) {
+      throw new Error('Engine is already started');
     }
-  }
+    this.started = true;
 
-  canGracefulStop() {
-    return this.doc.engineState$.value.saving === 0;
-  }
+    const { client, dispose } = this.workerProvider.openWorker(
+      this.props.engineWorkerInitOptions
+    );
+    this.worker = client;
+    this.disposables.push(dispose);
+    this.eventBus.emit(WorkspaceEngineBeforeStart, this);
 
-  async waitForGracefulStop(abort?: AbortSignal) {
-    await this.doc.waitForSaved();
-    throwIfAborted(abort);
-    this.forceStop();
-  }
-
-  forceStop() {
-    this.doc.stop();
-    this.awareness.disconnect();
-    this.blob.stop();
-  }
-
-  docEngineState$ = this.doc.engineState$;
-
-  rootDocState$ = this.doc.docState$(this.workspaceService.workspace.id);
-
-  waitForDocSynced() {
-    return this.doc.waitForSynced();
-  }
-
-  waitForRootDocReady() {
-    return this.doc.waitForReady(this.workspaceService.workspace.id);
-  }
-
-  override dispose(): void {
-    this.forceStop();
-    this.doc.dispose();
-    this.awareness.dispose();
+    const rootDoc = this.workspaceService.workspace.docCollection.doc;
+    this.doc.addPriority(rootDoc.guid, 100);
+    this.doc.addDoc(rootDoc, true);
+    this.doc.start();
+    this.disposables.push(() => this.doc.stop());
+    this.awareness.connect(this.workspaceService.workspace.awareness);
   }
 }

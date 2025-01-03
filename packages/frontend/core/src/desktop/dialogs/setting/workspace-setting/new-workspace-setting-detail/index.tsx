@@ -8,9 +8,7 @@ import { useWorkspaceInfo } from '@affine/core/components/hooks/use-workspace-in
 import { WorkspaceServerService } from '@affine/core/modules/cloud';
 import { UNTITLED_WORKSPACE_NAME } from '@affine/env/constant';
 import { useI18n } from '@affine/i18n';
-import { ArrowRightSmallIcon } from '@blocksuite/icons/rc';
 import { FrameworkScope } from '@toeverything/infra';
-import { useCallback } from 'react';
 
 import { DeleteLeaveWorkspace } from './delete-leave-workspace';
 import { EnableCloudPanel } from './enable-cloud';
@@ -35,17 +33,6 @@ export const WorkspaceSettingDetail = ({
   const server = workspace?.scope.get(WorkspaceServerService).server;
 
   const workspaceInfo = useWorkspaceInfo(workspaceMetadata);
-
-  const handleResetSyncStatus = useCallback(() => {
-    workspace?.engine.doc
-      .resetSyncStatus()
-      .then(() => {
-        window.location.reload();
-      })
-      .catch(err => {
-        console.error(err);
-      });
-  }, [workspace]);
 
   if (!workspace) {
     return null;
@@ -86,19 +73,6 @@ export const WorkspaceSettingDetail = ({
         )}
         <SettingWrapper>
           <DeleteLeaveWorkspace onCloseSetting={onCloseSetting} />
-          <SettingRow
-            name={
-              <span style={{ color: 'var(--affine-text-secondary-color)' }}>
-                {t['com.affine.resetSyncStatus.button']()}
-              </span>
-            }
-            desc={t['com.affine.resetSyncStatus.description']()}
-            style={{ cursor: 'pointer' }}
-            onClick={handleResetSyncStatus}
-            data-testid="reset-sync-status"
-          >
-            <ArrowRightSmallIcon />
-          </SettingRow>
         </SettingWrapper>
       </FrameworkScope>
     </FrameworkScope>

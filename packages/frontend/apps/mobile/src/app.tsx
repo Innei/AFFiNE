@@ -10,11 +10,14 @@ import { configureLocalStorageStateStorageImpls } from '@affine/core/modules/sto
 import { PopupWindowProvider } from '@affine/core/modules/url';
 import { configureIndexedDBUserspaceStorageProvider } from '@affine/core/modules/userspace';
 import { configureBrowserWorkbenchModule } from '@affine/core/modules/workbench';
+import { WorkspaceEngineWorkerProvider } from '@affine/core/modules/workspace';
 import {
   configureBrowserWorkspaceFlavours,
   configureIndexedDBWorkspaceEngineStorageProvider,
 } from '@affine/core/modules/workspace-engine';
+import { WorkerClient } from '@affine/nbstore/worker/client';
 import { Framework, FrameworkRoot, getCurrentStore } from '@toeverything/infra';
+import { OpClient } from '@toeverything/infra/op';
 import { Suspense } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
@@ -30,6 +33,23 @@ configureBrowserWorkspaceFlavours(framework);
 configureIndexedDBWorkspaceEngineStorageProvider(framework);
 configureIndexedDBUserspaceStorageProvider(framework);
 configureMobileModules(framework);
+framework.impl(WorkspaceEngineWorkerProvider, {
+  openWorker(options) {
+    const worker = new Worker(
+      new URL(
+        /* webpackChunkName: "nbstore-worker" */ './worker.ts',
+        import.meta.url
+      )
+    );
+    const client = new WorkerClient(new OpClient(worker), options);
+    return {
+      client,
+      dispose: () => {
+        worker.terminate();
+      },
+    };
+  },
+});
 framework.impl(PopupWindowProvider, {
   open: (target: string) => {
     const targetUrl = new URL(target);

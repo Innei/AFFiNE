@@ -23,12 +23,16 @@ import { PopupWindowProvider } from '@affine/core/modules/url';
 import { ClientSchemeProvider } from '@affine/core/modules/url/providers/client-schema';
 import { configureIndexedDBUserspaceStorageProvider } from '@affine/core/modules/userspace';
 import { configureBrowserWorkbenchModule } from '@affine/core/modules/workbench';
-import { WorkspacesService } from '@affine/core/modules/workspace';
+import {
+  WorkspaceEngineWorkerProvider,
+  WorkspacesService,
+} from '@affine/core/modules/workspace';
 import {
   configureBrowserWorkspaceFlavours,
   configureIndexedDBWorkspaceEngineStorageProvider,
 } from '@affine/core/modules/workspace-engine';
 import { I18n } from '@affine/i18n';
+import { WorkerClient } from '@affine/nbstore/worker/client';
 import {
   defaultBlockMarkdownAdapterMatchers,
   docLinkBaseURLMiddleware,
@@ -44,6 +48,8 @@ import { Browser } from '@capacitor/browser';
 import { Haptics } from '@capacitor/haptics';
 import { Keyboard, KeyboardStyle } from '@capacitor/keyboard';
 import { Framework, FrameworkRoot, getCurrentStore } from '@toeverything/infra';
+import { OpClient } from '@toeverything/infra/op';
+import { AsyncCall } from 'async-call-rpc';
 import { useTheme } from 'next-themes';
 import { Suspense, useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
@@ -54,6 +60,7 @@ import { ModalConfigProvider } from './modal-config';
 import { Cookie } from './plugins/cookie';
 import { Hashcash } from './plugins/hashcash';
 import { Intelligents } from './plugins/intelligents';
+import { NbStoreNativeDBApis } from './plugins/nbstore';
 import { enableNavigationGesture$ } from './web-navigation-control';
 
 const future = {
@@ -68,6 +75,51 @@ configureBrowserWorkspaceFlavours(framework);
 configureIndexedDBWorkspaceEngineStorageProvider(framework);
 configureIndexedDBUserspaceStorageProvider(framework);
 configureMobileModules(framework);
+framework.impl(WorkspaceEngineWorkerProvider, {
+  openWorker(options) {
+    const worker = new Worker(
+      new URL(
+        /* webpackChunkName: "nbstore-worker" */ './worker.ts',
+        import.meta.url
+      )
+    );
+    const { port1: nativeDBApiChannelServer, port2: nativeDBApiChannelClient } =
+      new MessageChannel();
+    AsyncCall<typeof NbStoreNativeDBApis>(NbStoreNativeDBApis, {
+      channel: {
+        on(listener) {
+          const f = (e: MessageEvent<any>) => {
+            listener(e.data);
+          };
+          nativeDBApiChannelServer.addEventListener('message', f);
+          return () => {
+            nativeDBApiChannelServer.removeEventListener('message', f);
+          };
+        },
+        send(data) {
+          nativeDBApiChannelServer.postMessage(data);
+        },
+      },
+      log: false,
+    });
+    nativeDBApiChannelServer.start();
+    worker.postMessage(
+      {
+        type: 'native-db-api-channel',
+        port: nativeDBApiChannelClient,
+      },
+      [nativeDBApiChannelClient]
+    );
+    const client = new WorkerClient(new OpClient(worker), options);
+    return {
+      client,
+      dispose: () => {
+        worker.terminate();
+        nativeDBApiChannelServer.close();
+      },
+    };
+  },
+});
 framework.impl(PopupWindowProvider, {
   open: (url: string) => {
     Browser.open({

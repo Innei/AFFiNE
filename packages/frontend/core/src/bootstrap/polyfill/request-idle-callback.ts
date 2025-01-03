@@ -1,6 +1,6 @@
 export function polyfillEventLoop() {
-  window.requestIdleCallback =
-    window.requestIdleCallback ||
+  globalThis.requestIdleCallback =
+    globalThis.requestIdleCallback ||
     function (cb) {
       const start = Date.now();
       return setTimeout(function () {
@@ -13,8 +13,8 @@ export function polyfillEventLoop() {
       }, 1);
     };
 
-  window.cancelIdleCallback =
-    window.cancelIdleCallback ||
+  globalThis.cancelIdleCallback =
+    globalThis.cancelIdleCallback ||
     function (id) {
       clearTimeout(id);
     };

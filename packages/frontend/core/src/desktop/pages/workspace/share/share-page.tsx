@@ -25,7 +25,6 @@ import {
   type Workspace,
   WorkspacesService,
 } from '@affine/core/modules/workspace';
-import { CloudBlobStorage } from '@affine/core/modules/workspace-engine';
 import { useI18n } from '@affine/i18n';
 import {
   type DocMode,
@@ -36,9 +35,7 @@ import type { AffineEditorContainer } from '@blocksuite/affine/presets';
 import { DisposableGroup } from '@blocksuite/global/utils';
 import { Logo1Icon } from '@blocksuite/icons/rc';
 import {
-  EmptyBlobStorage,
   FrameworkScope,
-  ReadonlyDocStorage,
   useLiveData,
   useService,
   useServices,
@@ -161,6 +158,7 @@ const SharePageInner = ({
   templateName?: string;
   templateSnapshotUrl?: string;
 }) => {
+  const serverService = useService(ServerService);
   const workspacesService = useService(WorkspacesService);
   const fetchService = useService(FetchService);
   const graphQLService = useService(GraphQLService);
@@ -181,33 +179,30 @@ const SharePageInner = ({
         isSharedMode: true,
       },
       {
-        getDocStorage() {
-          return new ReadonlyDocStorage({
-            [workspaceId]: workspaceBinary,
-            [docId]: docBinary,
-          });
+        local: {
+          doc: {
+            name: 'StaticCloudDocStorage',
+            opts: {
+              id: workspaceId,
+              serverBaseUrl: serverService.server.baseUrl,
+            },
+          },
+          blob: {
+            name: 'CloudBlobStorage',
+            opts: {
+              id: workspaceId,
+              serverBaseUrl: serverService.server.baseUrl,
+            },
+          },
         },
-        getAwarenessConnections() {
-          return [];
-        },
-        getDocServer() {
-          return null;
-        },
-        getLocalBlobStorage() {
-          return EmptyBlobStorage;
-        },
-        getRemoteBlobStorages() {
-          return [
-            new CloudBlobStorage(workspaceId, fetchService, graphQLService),
-          ];
-        },
+        remotes: {},
       }
     );
 
     setWorkspace(workspace);
 
-    workspace.engine
-      .waitForRootDocReady()
+    workspace.engine.doc
+      .waitForDocLoaded(workspace.id)
       .then(() => {
         const { doc } = workspace.scope.get(DocsService).open(docId);
 
@@ -237,6 +232,8 @@ const SharePageInner = ({
     docBinary,
     fetchService,
     graphQLService,
+    serverService.server.id,
+    serverService.server.baseUrl,
   ]);
 
   const t = useI18n();

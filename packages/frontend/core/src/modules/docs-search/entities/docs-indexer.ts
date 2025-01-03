@@ -81,26 +81,31 @@ export class DocsIndexer extends Entity {
   }
 
   setupListener() {
-    this.disposables.push(
-      this.workspaceEngine.doc.storage.eventBus.on(event => {
-        if (WorkspaceDBService.isDBDocId(event.docId)) {
-          // skip db doc
-          return;
-        }
-        if (event.clientId === this.workspaceEngine.doc.clientId) {
-          this.jobQueue
-            .enqueue([
-              {
-                batchKey: event.docId,
-                payload: { storageDocId: event.docId },
-              },
-            ])
-            .catch(err => {
-              console.error('Error enqueueing job', err);
-            });
-        }
+    this.workspaceEngine.doc.storage.connection
+      .waitForConnected()
+      .then(() => {
+        this.disposables.push(
+          this.workspaceEngine.doc.storage.subscribeDocUpdate(updated => {
+            if (WorkspaceDBService.isDBDocId(updated.docId)) {
+              // skip db doc
+              return;
+            }
+            this.jobQueue
+              .enqueue([
+                {
+                  batchKey: updated.docId,
+                  payload: { storageDocId: updated.docId },
+                },
+              ])
+              .catch(err => {
+                console.error('Error enqueueing job', err);
+              });
+          })
+        );
       })
-    );
+      .catch(err => {
+        console.error('Error waiting for doc storage connection', err);
+      });
   }
 
   async execJob(jobs: Job<IndexerJobPayload>[], signal: AbortSignal) {
@@ -129,10 +134,9 @@ export class DocsIndexer extends Entity {
     let workerOutput;
 
     if (storageDocId === this.workspaceId) {
-      const rootDocBuffer =
-        await this.workspaceEngine.doc.storage.loadDocFromLocal(
-          this.workspaceId
-        );
+      const rootDocBuffer = (
+        await this.workspaceEngine.doc.storage.getDoc(this.workspaceId)
+      )?.bin;
       if (!rootDocBuffer) {
         return;
       }
@@ -147,15 +151,13 @@ export class DocsIndexer extends Entity {
         rootDocId: this.workspaceId,
       });
     } else {
-      const rootDocBuffer =
-        await this.workspaceEngine.doc.storage.loadDocFromLocal(
-          this.workspaceId
-        );
+      const rootDocBuffer = (
+        await this.workspaceEngine.doc.storage.getDoc(this.workspaceId)
+      )?.bin;
 
       const docBuffer =
-        (await this.workspaceEngine.doc.storage.loadDocFromLocal(
-          storageDocId
-        )) ?? new Uint8Array(0);
+        (await this.workspaceEngine.doc.storage.getDoc(storageDocId))?.bin ??
+        new Uint8Array(0);
 
       if (!rootDocBuffer) {
         return;

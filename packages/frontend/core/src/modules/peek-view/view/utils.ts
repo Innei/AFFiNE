@@ -52,10 +52,7 @@ export const useEditor = (
 
   // set sync engine priority target
   useEffect(() => {
-    currentWorkspace.engine.doc.setPriority(pageId, 10);
-    return () => {
-      currentWorkspace.engine.doc.setPriority(pageId, 5);
-    };
+    return currentWorkspace.engine.doc.addPriority(pageId, 10);
   }, [currentWorkspace, pageId]);
 
   return { doc, editor, workspace: currentWorkspace, loading: !docListReady };

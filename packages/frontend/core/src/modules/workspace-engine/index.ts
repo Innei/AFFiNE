@@ -20,12 +20,9 @@ export { base64ToUint8Array, uint8ArrayToBase64 } from './utils/base64';
 
 export function configureBrowserWorkspaceFlavours(framework: Framework) {
   framework
-    .impl(WorkspaceFlavoursProvider('LOCAL'), LocalWorkspaceFlavoursProvider, [
-      WorkspaceEngineStorageProvider,
-    ])
+    .impl(WorkspaceFlavoursProvider('LOCAL'), LocalWorkspaceFlavoursProvider)
     .impl(WorkspaceFlavoursProvider('CLOUD'), CloudWorkspaceFlavoursProvider, [
       GlobalState,
-      WorkspaceEngineStorageProvider,
       ServersService,
     ]);
 }

@@ -18,7 +18,7 @@ export class ImportTemplateService extends Service {
       this.workspacesService.open({
         metadata: workspaceMetadata,
       });
-    await workspace.engine.waitForRootDocReady();
+    await workspace.engine.doc.waitForDocReady(workspace.id); // wait for root doc ready
     const [importedDoc] = await ZipTransformer.importDocs(
       workspace.docCollection,
       new Blob([docBinary], {
@@ -42,7 +42,7 @@ export class ImportTemplateService extends Service {
     docBinary: Uint8Array
     // todo: support doc mode on init
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
     let docId: string = null!;
     const { id: workspaceId } = await this.workspacesService.create(
       flavour,
@@ -51,7 +51,10 @@ export class ImportTemplateService extends Service {
         docCollection.meta.setName(workspaceName);
         const doc = docCollection.createDoc();
         docId = doc.id;
-        await docStorage.doc.set(doc.spaceDoc.guid, docBinary);
+        await docStorage.pushDocUpdate({
+          docId: doc.spaceDoc.guid,
+          bin: docBinary,
+        });
       }
     );
     return { workspaceId, docId };

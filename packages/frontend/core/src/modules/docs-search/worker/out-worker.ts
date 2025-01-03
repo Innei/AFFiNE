@@ -1,5 +1,4 @@
 import { DebugLogger } from '@affine/debug';
-import { connectWebWorker } from '@affine/electron-api/web-worker';
 import { MANUALLY_STOP, throwIfAborted } from '@toeverything/infra';
 
 import type {
@@ -13,7 +12,6 @@ const logger = new DebugLogger('affine:indexer-worker');
 
 export async function createWorker(abort: AbortSignal) {
   let worker: Worker | null = null;
-  let electronApiCleanup: (() => void) | null = null;
   while (throwIfAborted(abort)) {
     try {
       worker = await new Promise<Worker>((resolve, reject) => {
@@ -31,10 +29,6 @@ export async function createWorker(abort: AbortSignal) {
           }
         });
         worker.postMessage({ type: 'init', msgId: 0 } as WorkerIngoingMessage);
-
-        if (BUILD_CONFIG.isElectron) {
-          electronApiCleanup = connectWebWorker(worker);
-        }
 
         setTimeout(() => {
           reject('timeout');
@@ -104,7 +98,6 @@ export async function createWorker(abort: AbortSignal) {
     dispose: () => {
       terminateAbort.abort(MANUALLY_STOP);
       worker.terminate();
-      electronApiCleanup?.();
     },
   };
 }
