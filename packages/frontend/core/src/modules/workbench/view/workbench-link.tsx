@@ -43,8 +43,6 @@ export const WorkbenchLink = forwardRef<HTMLAnchorElement, WorkbenchLinkProps>(
       [onClick, replaceHistory, to, workbench]
     );
 
-    // eslint suspicious runtime error
-
     return (
       <a
         {...other}

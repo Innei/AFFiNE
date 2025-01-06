@@ -3,6 +3,7 @@ import {
   clickNewPageButton,
   createLinkedPage,
   dragTo,
+  waitForAllPagesLoad,
 } from '@affine-test/kit/utils/page-logic';
 import { clickSideBarAllPageButton } from '@affine-test/kit/utils/sidebar';
 import { expect, type Page } from '@playwright/test';
@@ -174,6 +175,60 @@ test('open split view', async ({ page }) => {
     'data-active',
     'true'
   );
+
+  const firstDragHandel = page
+    .getByTestId('split-view-panel')
+    .first()
+    .getByTestId('split-view-indicator');
+
+  await dragTo(
+    page,
+    firstDragHandel,
+    page.getByTestId('split-view-panel').last(),
+    'center',
+    true
+  );
+
+  await expectTabTitle(page, 0, ['hi from another page', 'Untitled']);
+});
+
+test('open split view in all docs (operations button)', async ({ page }) => {
+  const testTitle = 'test-page';
+  await clickNewPageButton(page, testTitle);
+  await clickSideBarAllPageButton(page);
+  await waitForAllPagesLoad(page);
+  await page
+    .getByTestId('page-list-item')
+    .filter({
+      hasText: testTitle,
+    })
+    .getByTestId('page-list-operation-button')
+    .click();
+  await page.getByRole('menuitem', { name: 'Open in Split View' }).click();
+  await expect(page.getByTestId('split-view-panel')).toHaveCount(2);
+  const targetPage = page.getByTestId('split-view-panel').last();
+  await expect(targetPage).toHaveAttribute('data-is-active', 'true');
+  await expect(targetPage.locator('.doc-title-container')).toBeVisible();
+  await expect(targetPage.locator('.doc-title-container')).toContainText(
+    testTitle
+  );
+});
+
+test('open split view in all docs (drag to resize handle)', async ({
+  page,
+}) => {
+  const testTitle = 'test-page';
+  await clickNewPageButton(page, testTitle);
+  await clickSideBarAllPageButton(page);
+  await waitForAllPagesLoad(page);
+  const pageItem = page.getByTestId('page-list-item').filter({
+    hasText: testTitle,
+  });
+
+  const leftResizeHandle = page.getByTestId('resize-handle').first();
+
+  await dragTo(page, pageItem, leftResizeHandle, 'center');
+  await expectTabTitle(page, 0, ['test-page', 'All docs']);
 });
 
 test('drag a page from "All pages" list to tabs header', async ({ page }) => {

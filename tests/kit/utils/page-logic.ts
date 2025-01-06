@@ -139,7 +139,8 @@ export const dragTo = async (
   page: Page,
   locator: Locator,
   target: Locator,
-  location: DragLocation = 'center'
+  location: DragLocation = 'center',
+  willMoveOnDrag = false
 ) => {
   await locator.hover();
   const locatorElement = await locator.boundingBox();
@@ -164,18 +165,20 @@ export const dragTo = async (
 
   await target.hover();
 
-  const targetElement = await target.boundingBox();
-  if (!targetElement) {
-    throw new Error('target element not found');
-  }
-  const targetPosition = toPosition(targetElement, location);
-  await page.mouse.move(
-    targetElement.x + targetPosition.x,
-    targetElement.y + targetPosition.y,
-    {
-      steps: 10,
+  if (!willMoveOnDrag) {
+    const targetElement = await target.boundingBox();
+    if (!targetElement) {
+      throw new Error('target element not found');
     }
-  );
+    const targetPosition = toPosition(targetElement, location);
+    await page.mouse.move(
+      targetElement.x + targetPosition.x,
+      targetElement.y + targetPosition.y,
+      {
+        steps: 10,
+      }
+    );
+  }
   await page.waitForTimeout(100);
   await page.mouse.up();
 };
