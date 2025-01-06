@@ -716,6 +716,7 @@
   "com.affine.page-properties.property.updatedAt": "Updated",
   "com.affine.page-properties.property.edgelessTheme": "Edgeless theme",
   "com.affine.page-properties.property.pageWidth": "Page width",
+  "com.affine.page-properties.property.template": "Template",
   "com.affine.page-properties.property.tags.tooltips": "Add relevant identifiers or categories to the doc. Useful for organizing content, improving searchability, and grouping related docs together.",
   "com.affine.page-properties.property.journal.tooltips": "Indicates that this doc is a journal entry or daily note. Facilitates easy capture of ideas, quick logging of thoughts, and ongoing personal reflection.",
   "com.affine.page-properties.property.checkbox.tooltips": "Use a checkbox to indicate whether a condition is true or false. Useful for confirming options, toggling features, or tracking task states.",
@@ -734,6 +735,7 @@
   "com.affine.page-properties.property.docPrimaryMode.tooltips": "Select the doc mode from Page Mode, Edgeless Mode, or Auto. Useful for choosing the best display for your content.",
   "com.affine.page-properties.property.edgelessTheme.tooltips": "Select the doc theme from Light, Dark, or System. Useful for precise control over content viewing style.",
   "com.affine.page-properties.property.pageWidth.tooltips": "Control the width of this page to fit content display needs.",
+  "com.affine.page-properties.property.template.tooltips": "Mark this doc as a template, which can be used to create new docs.",
   "com.affine.propertySidebar.property-list.section": "Properties",
   "com.affine.propertySidebar.add-more.section": "Add more properties",
   "com.affine.page-properties.settings.title": "customize properties",
@@ -1618,5 +1620,9 @@
   "com.affine.payment.sync-paused.member.storage.description": "This workspace has exceeded its storage limit and synchronization has been paused. Please contact your workspace owner to either reduce storage usage or upgrade the plan to resume syncing.",
   "com.affine.payment.sync-paused.member.member.description": "This workspace has reached its maximum member capacity and synchronization has been paused. Please contact your workspace owner to either adjust team membership or upgrade the plan to resume syncing.",
   "com.affine.payment.sync-paused.member.member.confirm": "Got It",
-  "com.affine.server.delete": "Delete Server"
+  "com.affine.server.delete": "Delete Server",
+  "com.affine.page-starter-bar.start": "Start",
+  "com.affine.page-starter-bar.template": "Template",
+  "com.affine.page-starter-bar.ai": "With AI",
+  "com.affine.page-starter-bar.edgeless": "Edgeless"
 }

@@ -24,6 +24,12 @@ export const BUILT_IN_CUSTOM_PROPERTY_TYPE = [
     index: 'a0000003',
   },
   {
+    id: 'template',
+    type: 'template',
+    index: 'a00000031',
+    show: 'always-show',
+  },
+  {
     id: 'createdAt',
     type: 'createdAt',
     index: 'a0000004',
@@ -51,4 +57,4 @@ export const BUILT_IN_CUSTOM_PROPERTY_TYPE = [
     show: 'always-hide',
     index: 'a0000008',
   },
-] as DocCustomPropertyInfo[];
+] satisfies DocCustomPropertyInfo[];

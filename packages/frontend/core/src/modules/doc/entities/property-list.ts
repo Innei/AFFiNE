@@ -5,10 +5,14 @@ import {
 } from '@toeverything/infra';
 
 import type { DocCustomPropertyInfo } from '../../db/schema/schema';
+import type { FeatureFlagService } from '../../feature-flag';
 import type { DocPropertiesStore } from '../stores/doc-properties';
 
 export class DocPropertyList extends Entity {
-  constructor(private readonly docPropertiesStore: DocPropertiesStore) {
+  constructor(
+    private readonly docPropertiesStore: DocPropertiesStore,
+    private readonly featureFlagService: FeatureFlagService
+  ) {
     super();
   }
 
@@ -17,10 +21,22 @@ export class DocPropertyList extends Entity {
     []
   );
 
-  sortedProperties$ = this.properties$.map(list =>
+  sortedProperties$ = LiveData.computed(get => {
+    const enableTemplateDoc = get(
+      this.featureFlagService.flags.enable_template_doc.$
+    );
+    const properties = get(this.properties$);
+
     // default index key is '', so always before any others
-    list.toSorted((a, b) => ((a.index ?? '') > (b.index ?? '') ? 1 : -1))
-  );
+    return properties
+      .toSorted((a, b) => ((a.index ?? '') > (b.index ?? '') ? 1 : -1))
+      .filter(property => {
+        if (property.id === 'template') {
+          return enableTemplateDoc;
+        }
+        return true;
+      });
+  });
 
   propertyInfo$(id: string) {
     return this.properties$.map(list => list.find(info => info.id === id));

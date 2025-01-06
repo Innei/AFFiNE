@@ -9,6 +9,7 @@ export { DocsService } from './services/docs';
 import type { Framework } from '@toeverything/infra';
 
 import { WorkspaceDBService } from '../db';
+import { FeatureFlagService } from '../feature-flag';
 import { WorkspaceScope, WorkspaceService } from '../workspace';
 import { Doc } from './entities/doc';
 import { DocPropertyList } from './entities/property-list';
@@ -28,7 +29,7 @@ export function configureDocModule(framework: Framework) {
     .store(DocsStore, [WorkspaceService, DocPropertiesStore])
     .entity(DocRecord, [DocsStore, DocPropertiesStore])
     .entity(DocRecordList, [DocsStore])
-    .entity(DocPropertyList, [DocPropertiesStore])
+    .entity(DocPropertyList, [DocPropertiesStore, FeatureFlagService])
     .scope(DocScope)
     .entity(Doc, [DocScope, DocsStore, WorkspaceService])
     .service(DocService);

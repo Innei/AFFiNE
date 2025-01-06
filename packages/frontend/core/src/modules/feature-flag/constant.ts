@@ -233,6 +233,15 @@ export const AFFINE_FLAGS = {
     configurable: !isMobile,
     defaultState: false,
   },
+  // TODO(@CatsJuice): remove this flag when ready
+  enable_template_doc: {
+    category: 'affine',
+    displayName: 'Enable template doc',
+    description:
+      'Allow users to mark a doc as a template, and create new docs from it',
+    configurable: !isMobile,
+    defaultState: false,
+  },
 } satisfies { [key in string]: FlagInfo };
 
 // oxlint-disable-next-line no-redeclare

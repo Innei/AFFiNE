@@ -1,6 +1,7 @@
 import type { DocMode, RootBlockModel } from '@blocksuite/affine/blocks';
 import { Entity } from '@toeverything/infra';
 
+import type { DocProperties } from '../../db';
 import type { WorkspaceService } from '../../workspace';
 import type { DocScope } from '../scopes/doc';
 import type { DocsStore } from '../stores/docs';
@@ -36,6 +37,18 @@ export class Doc extends Entity {
 
   customProperty$(propertyId: string) {
     return this.record.customProperty$(propertyId);
+  }
+
+  setProperty(propertyId: string, value: string) {
+    return this.record.setProperty(propertyId, value);
+  }
+
+  updateProperties(properties: Partial<DocProperties>) {
+    return this.record.updateProperties(properties);
+  }
+
+  getProperties() {
+    return this.record.getProperties();
   }
 
   setCustomProperty(propertyId: string, value: string) {

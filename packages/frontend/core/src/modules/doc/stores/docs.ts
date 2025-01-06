@@ -24,6 +24,10 @@ export class DocsStore extends Store {
     return this.workspaceService.workspace.docCollection.getDoc(id);
   }
 
+  getBlocksuiteCollection() {
+    return this.workspaceService.workspace.docCollection;
+  }
+
   createBlockSuiteDoc() {
     return this.workspaceService.workspace.docCollection.createDoc();
   }

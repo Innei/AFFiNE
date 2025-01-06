@@ -42,7 +42,18 @@ export class DocRecord extends Entity<{ id: string }> {
     });
   }
 
-  setProperty(propertyId: string, value: string) {
+  getProperties() {
+    return this.docPropertiesStore.getDocProperties(this.id);
+  }
+
+  updateProperties(properties: Partial<DocProperties>) {
+    this.docPropertiesStore.updateDocProperties(this.id, properties);
+  }
+
+  setProperty<Key extends keyof DocProperties>(
+    propertyId: Key,
+    value: DocProperties[Key]
+  ) {
     this.docPropertiesStore.updateDocProperties(this.id, {
       [propertyId]: value,
     });
