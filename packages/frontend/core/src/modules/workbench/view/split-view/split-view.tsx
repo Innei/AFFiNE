@@ -1,13 +1,8 @@
 import { useDndMonitor } from '@affine/component';
 import { useAppSettingHelper } from '@affine/core/components/hooks/affine/use-app-setting-helper';
 import { DesktopApiService } from '@affine/core/modules/desktop-api';
-import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import type { AffineDNDData } from '@affine/core/types/dnd';
-import {
-  useLiveData,
-  useService,
-  useServiceOptional,
-} from '@toeverything/infra';
+import { useService, useServiceOptional } from '@toeverything/infra';
 import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
@@ -40,7 +35,6 @@ export const SplitView = ({
   const { appSettings } = useAppSettingHelper();
   const workbench = useService(WorkbenchService).workbench;
   const electronApi = useServiceOptional(DesktopApiService);
-  const featureFlagService = useService(FeatureFlagService);
 
   // workaround: blocksuite's lit host element has an issue on remounting.
   // we do not want the view to change its render ordering here after reordering
@@ -84,10 +78,6 @@ export const SplitView = ({
     [onMove]
   );
 
-  const enableMultiView = useLiveData(
-    featureFlagService.flags.enable_multi_view.$
-  );
-
   const [draggingDoc, setDraggingDoc] = useState(false);
 
   useDndMonitor<AffineDNDData>(() => {
@@ -96,7 +86,6 @@ export const SplitView = ({
       // allowExternal: true,
       onDragStart(data) {
         if (
-          enableMultiView &&
           data.source.data?.entity?.type === 'doc' &&
           !(
             data.source.data?.from?.at === 'app-header:tabs' &&
@@ -107,10 +96,6 @@ export const SplitView = ({
         }
       },
       onDrop(data) {
-        if (!enableMultiView) {
-          return;
-        }
-
         setDraggingDoc(false);
         if (!data.source.data.entity) {
           return;

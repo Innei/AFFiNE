@@ -103,18 +103,6 @@ export const AFFINE_FLAGS = {
     configurable: false,
     defaultState: true,
   },
-  enable_multi_view: {
-    category: 'affine',
-    displayName:
-      'com.affine.settings.workspace.experimental-features.enable-multi-view.name',
-    description:
-      'com.affine.settings.workspace.experimental-features.enable-multi-view.description',
-    feedbackType: 'discord',
-    feedbackLink:
-      'https://discord.com/channels/959027316334407691/1280009690004324405',
-    configurable: isDesktopEnvironment,
-    defaultState: isCanaryBuild,
-  },
   enable_emoji_folder_icon: {
     category: 'affine',
     displayName:

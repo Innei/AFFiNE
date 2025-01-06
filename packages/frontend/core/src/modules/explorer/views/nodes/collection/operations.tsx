@@ -9,7 +9,6 @@ import { useDeleteCollectionInfo } from '@affine/core/components/hooks/affine/us
 import { IsFavoriteIcon } from '@affine/core/components/pure/icons';
 import { CollectionService } from '@affine/core/modules/collection';
 import { CompatibleFavoriteItemsAdapter } from '@affine/core/modules/favorite';
-import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import { useI18n } from '@affine/i18n';
@@ -37,13 +36,11 @@ export const useExplorerCollectionNodeOperations = (
     workspaceService,
     collectionService,
     compatibleFavoriteItemsAdapter,
-    featureFlagService,
   } = useServices({
     WorkbenchService,
     WorkspaceService,
     CollectionService,
     CompatibleFavoriteItemsAdapter,
-    FeatureFlagService,
   });
   const deleteInfo = useDeleteCollectionInfo();
 
@@ -51,9 +48,6 @@ export const useExplorerCollectionNodeOperations = (
     workspaceService.workspace.docCollection
   );
 
-  const enableMultiView = useLiveData(
-    featureFlagService.flags.enable_multi_view.$
-  );
   const favorite = useLiveData(
     useMemo(
       () =>
@@ -173,7 +167,7 @@ export const useExplorerCollectionNodeOperations = (
           </MenuItem>
         ),
       },
-      ...(BUILD_CONFIG.isElectron && enableMultiView
+      ...(BUILD_CONFIG.isElectron
         ? [
             {
               index: 99,
@@ -206,7 +200,6 @@ export const useExplorerCollectionNodeOperations = (
       },
     ],
     [
-      enableMultiView,
       favorite,
       handleAddDocToCollection,
       handleDeleteCollection,

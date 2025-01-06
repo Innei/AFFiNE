@@ -3,7 +3,6 @@ import { Menu, MenuItem, usePromptModal } from '@affine/component';
 import { useDeleteCollectionInfo } from '@affine/core/components/hooks/affine/use-delete-collection-info';
 import { WorkspaceDialogService } from '@affine/core/modules/dialogs';
 import { CompatibleFavoriteItemsAdapter } from '@affine/core/modules/favorite';
-import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import type { Collection } from '@affine/env/filter';
 import { useI18n } from '@affine/i18n';
@@ -36,21 +35,16 @@ export const CollectionOperations = ({
   const {
     collectionService: service,
     workbenchService,
-    featureFlagService,
     workspaceDialogService,
   } = useServices({
     CollectionService,
     WorkbenchService,
-    FeatureFlagService,
     WorkspaceDialogService,
   });
   const deleteInfo = useDeleteCollectionInfo();
   const workbench = workbenchService.workbench;
   const t = useI18n();
   const { openPromptModal } = usePromptModal();
-  const enableMultiView = useLiveData(
-    featureFlagService.flags.enable_multi_view.$
-  );
 
   const showEditName = useCallback(() => {
     // use openRenameModal if it is in the sidebar collection list
@@ -150,7 +144,7 @@ export const CollectionOperations = ({
         name: t['com.affine.workbench.tab.page-menu-open'](),
         click: openCollectionNewTab,
       },
-      ...(BUILD_CONFIG.isElectron && enableMultiView
+      ...(BUILD_CONFIG.isElectron
         ? [
             {
               icon: <SplitViewIcon />,
@@ -172,7 +166,6 @@ export const CollectionOperations = ({
       },
     ],
     [
-      enableMultiView,
       t,
       showEditName,
       showEdit,

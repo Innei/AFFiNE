@@ -4,7 +4,6 @@ import { useLiveData, useServices } from '@toeverything/infra';
 import { type To } from 'history';
 import { forwardRef, type MouseEvent } from 'react';
 
-import { FeatureFlagService } from '../../feature-flag';
 import { WorkbenchService } from '../services/workbench';
 
 export type WorkbenchLinkProps = React.PropsWithChildren<
@@ -17,13 +16,9 @@ export type WorkbenchLinkProps = React.PropsWithChildren<
 
 export const WorkbenchLink = forwardRef<HTMLAnchorElement, WorkbenchLinkProps>(
   function WorkbenchLink({ to, onClick, replaceHistory, ...other }, ref) {
-    const { featureFlagService, workbenchService } = useServices({
-      FeatureFlagService,
+    const { workbenchService } = useServices({
       WorkbenchService,
     });
-    const enableMultiView = useLiveData(
-      featureFlagService.flags.enable_multi_view.$
-    );
     const workbench = workbenchService.workbench;
     const basename = useLiveData(workbench.basename$);
     const link =
@@ -37,9 +32,7 @@ export const WorkbenchLink = forwardRef<HTMLAnchorElement, WorkbenchLinkProps>(
         }
         const at = (() => {
           if (isNewTabTrigger(event)) {
-            return BUILD_CONFIG.isElectron && event.altKey && enableMultiView
-              ? 'tail'
-              : 'new-tab';
+            return BUILD_CONFIG.isElectron && event.altKey ? 'tail' : 'new-tab';
           }
           return 'active';
         })();
@@ -47,11 +40,11 @@ export const WorkbenchLink = forwardRef<HTMLAnchorElement, WorkbenchLinkProps>(
         event.preventDefault();
         event.stopPropagation();
       },
-      [enableMultiView, onClick, replaceHistory, to, workbench]
+      [onClick, replaceHistory, to, workbench]
     );
 
     // eslint suspicious runtime error
-    // eslint-disable-next-line react/no-danger-with-children
+
     return (
       <a
         {...other}

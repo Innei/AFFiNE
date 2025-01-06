@@ -14,7 +14,6 @@ import {
   CompatibleFavoriteItemsAdapter,
   FavoriteService,
 } from '@affine/core/modules/favorite';
-import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import type { Collection, DeleteCollectionInfo } from '@affine/env/filter';
@@ -65,19 +64,15 @@ export const PageOperationCell = ({
 }: PageOperationCellProps) => {
   const t = useI18n();
   const {
-    featureFlagService,
     workspaceService,
     compatibleFavoriteItemsAdapter: favAdapter,
     workbenchService,
   } = useServices({
-    FeatureFlagService,
     WorkspaceService,
     CompatibleFavoriteItemsAdapter,
     WorkbenchService,
   });
-  const enableSplitView = useLiveData(
-    featureFlagService.flags.enable_multi_view.$
-  );
+
   const currentWorkspace = workspaceService.workspace;
   const favourite = useLiveData(favAdapter.isFavorite$(page.id, 'doc'));
   const workbench = workbenchService.workbench;
@@ -194,7 +189,7 @@ export const PageOperationCell = ({
       <MenuItem onClick={onOpenInNewTab} prefixIcon={<OpenInNewIcon />}>
         {t['com.affine.workbench.tab.page-menu-open']()}
       </MenuItem>
-      {BUILD_CONFIG.isElectron && enableSplitView ? (
+      {BUILD_CONFIG.isElectron ? (
         <MenuItem onClick={onOpenInSplitView} prefixIcon={<SplitViewIcon />}>
           {t['com.affine.workbench.split-view.page-menu-open']()}
         </MenuItem>

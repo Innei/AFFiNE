@@ -13,7 +13,6 @@ import { IsFavoriteIcon } from '@affine/core/components/pure/icons';
 import { DocsService } from '@affine/core/modules/doc';
 import type { NodeOperation } from '@affine/core/modules/explorer';
 import { CompatibleFavoriteItemsAdapter } from '@affine/core/modules/favorite';
-import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import { preventDefault } from '@affine/core/utils';
@@ -171,7 +170,6 @@ export const useExplorerDocNodeOperationsMenu = (
   }
 ): NodeOperation[] => {
   const t = useI18n();
-  const featureFlagService = useService(FeatureFlagService);
   const {
     favorite,
     handleAddLinkedPage,
@@ -186,9 +184,6 @@ export const useExplorerDocNodeOperationsMenu = (
   const docService = useService(DocsService);
   const docRecord = useLiveData(docService.list.doc$(docId));
   const title = useLiveData(docRecord?.title$);
-  const enableMultiView = useLiveData(
-    featureFlagService.flags.enable_multi_view.$
-  );
 
   return useMemo(
     () => [
@@ -258,7 +253,7 @@ export const useExplorerDocNodeOperationsMenu = (
           </MenuItem>
         ),
       },
-      ...(BUILD_CONFIG.isElectron && enableMultiView
+      ...(BUILD_CONFIG.isElectron
         ? [
             {
               index: 100,
@@ -305,7 +300,6 @@ export const useExplorerDocNodeOperationsMenu = (
     ],
     [
       docId,
-      enableMultiView,
       favorite,
       handleAddLinkedPage,
       handleDuplicate,

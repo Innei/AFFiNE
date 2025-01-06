@@ -11,7 +11,6 @@ import { IsFavoriteIcon } from '@affine/core/components/pure/icons';
 import { CollectionService } from '@affine/core/modules/collection';
 import type { NodeOperation } from '@affine/core/modules/explorer';
 import { CompatibleFavoriteItemsAdapter } from '@affine/core/modules/favorite';
-import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import { useI18n } from '@affine/i18n';
@@ -161,10 +160,6 @@ export const useExplorerCollectionNodeOperationsMenu = (
   onOpenEdit: () => void
 ): NodeOperation[] => {
   const t = useI18n();
-  const { featureFlagService } = useServices({ FeatureFlagService });
-  const enableMultiView = useLiveData(
-    featureFlagService.flags.enable_multi_view.$
-  );
 
   const {
     favorite,
@@ -246,7 +241,7 @@ export const useExplorerCollectionNodeOperationsMenu = (
           </MenuItem>
         ),
       },
-      ...(BUILD_CONFIG.isElectron && enableMultiView
+      ...(BUILD_CONFIG.isElectron
         ? [
             {
               index: 99,
@@ -279,7 +274,6 @@ export const useExplorerCollectionNodeOperationsMenu = (
       },
     ],
     [
-      enableMultiView,
       favorite,
       handleAddDocToCollection,
       handleDeleteCollection,
