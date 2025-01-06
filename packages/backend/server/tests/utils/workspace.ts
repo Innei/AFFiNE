@@ -180,3 +180,27 @@ export async function grantMember(
   }
   return res.body.data?.grantMember;
 }
+
+export async function revokeMember(
+  app: INestApplication,
+  token: string,
+  workspaceId: string,
+  userId: string
+) {
+  const res = await request(app.getHttpServer())
+    .post(gql)
+    .auth(token, { type: 'bearer' })
+    .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
+    .send({
+      query: `
+          mutation {
+            revoke(workspaceId: "${workspaceId}", userId: "${userId}")
+          }
+          `,
+    })
+    .expect(200);
+  if (res.body.errors) {
+    throw new Error(res.body.errors[0].message);
+  }
+  return res.body.data?.revokeMember;
+}
