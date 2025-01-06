@@ -398,13 +398,13 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   async sendChangePasswordEmail(email: string, callbackUrl: string) {
-    return this.mailer.sendChangePasswordEmail(email, callbackUrl);
+    return this.mailer.sendChangePasswordMail(email, callbackUrl);
   }
   async sendSetPasswordEmail(email: string, callbackUrl: string) {
-    return this.mailer.sendSetPasswordEmail(email, callbackUrl);
+    return this.mailer.sendSetPasswordMail(email, callbackUrl);
   }
   async sendChangeEmail(email: string, callbackUrl: string) {
-    return this.mailer.sendChangeEmail(email, callbackUrl);
+    return this.mailer.sendChangeEmailMail(email, callbackUrl);
   }
   async sendVerifyChangeEmail(email: string, callbackUrl: string) {
     return this.mailer.sendVerifyChangeEmail(email, callbackUrl);

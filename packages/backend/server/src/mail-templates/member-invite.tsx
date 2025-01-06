@@ -2,14 +2,14 @@ import { Img, Text } from '@react-email/components';
 
 import { EmailTemplate } from './components';
 
-export type InviteProps = {
+export type MemberInviteProps = {
   userName: string;
   userAvatar?: string;
   workspaceName: string;
   url: string;
 };
 
-const InviteContent = (props: Omit<InviteProps, 'url'>) => {
+const InviteContent = (props: Omit<MemberInviteProps, 'url'>) => {
   const { userAvatar, workspaceName } = props;
   let avatar = null;
   if (userAvatar) {
@@ -62,7 +62,7 @@ const InviteContent = (props: Omit<InviteProps, 'url'>) => {
   );
 };
 
-export default function Invite(props: InviteProps) {
+export default function MemberInvite(props: MemberInviteProps) {
   return (
     <EmailTemplate
       title="You are invited!"

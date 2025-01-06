@@ -130,7 +130,7 @@ export class WorkspaceService {
       return false;
     }
 
-    await this.mailer.sendAcceptedEmail(inviter.email, {
+    await this.mailer.sendMemberAcceptedEmail(inviter.email, {
       inviteeName: invitee.name,
       workspaceName: workspace.name,
     });
@@ -191,7 +191,7 @@ export class WorkspaceService {
 
     const owner = await this.permission.getWorkspaceOwner(target.workspace.id);
 
-    await this.mailer.sendInviteEmail(target.email, inviteId, {
+    await this.mailer.sendMemberInviteMail(target.email, inviteId, {
       workspace: target.workspace,
       user: {
         avatar: owner.avatarUrl || '',

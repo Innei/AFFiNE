@@ -615,7 +615,7 @@ export class WorkspaceResolver {
     const owner = await this.permissions.getWorkspaceOwner(workspaceId);
 
     if (sendLeaveMail) {
-      await this.mailer.sendLeaveWorkspaceEmail(owner.email, {
+      await this.mailer.sendMemberLeaveEmail(owner.email, {
         workspaceName,
         inviteeName: user.name,
       });

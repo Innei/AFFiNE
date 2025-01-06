@@ -1,5 +1,18 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 
+import {
+  renderChangeEmailMail,
+  renderChangeEmailNotificationMail,
+  renderChangePasswordMail,
+  renderMemberAcceptedMail,
+  renderMemberInviteMail,
+  renderMemberLeaveMail,
+  renderSetPasswordMail,
+  renderSignInMail,
+  renderSignUpMail,
+  renderVerifyChangeEmailMail,
+  renderVerifyEmailMail,
+} from '../../mail-templates';
 import { Config } from '../config';
 import { MailerServiceIsNotConfigured } from '../error';
 import { URLHelper } from '../helpers';
@@ -11,11 +24,6 @@ import {
   getRoleChangedTemplate,
   type RoleChangedMailParams,
 } from './template';
-import {
-  renderInviteEmail,
-  renderSignInEmail,
-  renderSignUpEmail,
-} from './templates';
 
 @Injectable()
 export class MailService {
@@ -50,7 +58,87 @@ export class MailService {
     return !!this.mailer;
   }
 
-  async sendInviteEmail(
+  async sendSignUpMail(to: string, url: string) {
+    const { html, subject } = await renderSignUpMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendSignInMail(to: string, url: string) {
+    const { html, subject } = await renderSignInMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendChangePasswordMail(to: string, url: string) {
+    const { html, subject } = await renderChangePasswordMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendSetPasswordMail(to: string, url: string) {
+    const { html, subject } = await renderSetPasswordMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendChangeEmailMail(to: string, url: string) {
+    const { html, subject } = await renderChangeEmailMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendVerifyChangeEmail(to: string, url: string) {
+    const { html, subject } = await renderVerifyChangeEmailMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendVerifyEmail(to: string, url: string) {
+    const { html, subject } = await renderVerifyEmailMail({ url });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendNotificationChangeEmail(to: string) {
+    const { html, subject } = await renderChangeEmailNotificationMail({ to });
+
+    return this.sendMail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  async sendMemberInviteMail(
     to: string,
     inviteId: string,
     invitationInfo: {
@@ -63,22 +151,15 @@ export class MailService {
       workspace: { name: workspaceName, avatar: workspaceAvatar },
     } = invitationInfo;
     const buttonUrl = this.url.link(`/invite/${inviteId}`);
-
-    const html = emailTemplate({
-      title: 'You are invited!',
-      content: await renderInviteEmail({
-        userName,
-        userAvatar,
-        workspaceName,
-        url: buttonUrl,
-      }),
-      buttonContent: 'Accept & Join',
-      buttonUrl,
+    const { html, subject } = await renderMemberInviteMail({
+      userName,
+      userAvatar,
+      workspaceName,
+      url: buttonUrl,
     });
-
     return this.sendMail({
       to,
-      subject: `${userName} invited you to join ${workspaceName}`,
+      subject,
       html,
       attachments: [
         {
@@ -91,151 +172,28 @@ export class MailService {
     });
   }
 
-  async sendSignUpMail(to: string, url: string) {
-    return this.sendMail({
-      to,
-      html: await renderSignUpEmail({ url }),
-      subject: 'Your AFFiNE account is waiting for you!',
-    });
-  }
-
-  async sendSignInMail(to: string, url: string) {
-    return this.sendMail({
-      to,
-      html: await renderSignInEmail({ url }),
-      subject: 'Sign in to AFFiNE',
-    });
-  }
-
-  async sendChangePasswordEmail(to: string, url: string) {
-    const html = emailTemplate({
-      title: 'Modify your AFFiNE password',
-      content:
-        'Click the button below to reset your password. The magic link will expire in 30 minutes.',
-      buttonContent: 'Set new password',
-      buttonUrl: url,
-    });
-    return this.sendMail({
-      to,
-      subject: `Modify your AFFiNE password`,
-      html,
-    });
-  }
-
-  async sendSetPasswordEmail(to: string, url: string) {
-    const html = emailTemplate({
-      title: 'Set your AFFiNE password',
-      content:
-        'Click the button below to set your password. The magic link will expire in 30 minutes.',
-      buttonContent: 'Set your password',
-      buttonUrl: url,
-    });
-    return this.sendMail({
-      to,
-      subject: `Set your AFFiNE password`,
-      html,
-    });
-  }
-
-  async sendChangeEmail(to: string, url: string) {
-    const html = emailTemplate({
-      title: 'Verify your current email for AFFiNE',
-      content:
-        'You recently requested to change the email address associated with your AFFiNE account. To complete this process, please click on the verification link below. This magic link will expire in 30 minutes.',
-      buttonContent: 'Verify and set up a new email address',
-      buttonUrl: url,
-    });
-    return this.sendMail({
-      to,
-      subject: `Verify your current email for AFFiNE`,
-      html,
-    });
-  }
-
-  async sendVerifyChangeEmail(to: string, url: string) {
-    const html = emailTemplate({
-      title: 'Verify your new email address',
-      content:
-        'You recently requested to change the email address associated with your AFFiNE account. To complete this process, please click on the verification link below. This magic link will expire in 30 minutes.',
-      buttonContent: 'Verify your new email address',
-      buttonUrl: url,
-    });
-    return this.sendMail({
-      to,
-      subject: `Verify your new email for AFFiNE`,
-      html,
-    });
-  }
-
-  async sendVerifyEmail(to: string, url: string) {
-    const html = emailTemplate({
-      title: 'Verify your email address',
-      content:
-        'You recently requested to verify the email address associated with your AFFiNE account. To complete this process, please click on the verification link below. This magic link will expire in 30 minutes.',
-      buttonContent: 'Verify your email address',
-      buttonUrl: url,
-    });
-    return this.sendMail({
-      to,
-      subject: `Verify your email for AFFiNE`,
-      html,
-    });
-  }
-
-  async sendNotificationChangeEmail(to: string) {
-    const html = emailTemplate({
-      title: 'Email change successful',
-      content: `As per your request, we have changed your email. Please make sure you're using ${to} when you log in the next time. `,
-    });
-    return this.sendMail({
-      to,
-      subject: `Your email has been changed`,
-      html,
-    });
-  }
-
-  async sendAcceptedEmail(
+  async sendMemberAcceptedEmail(
     to: string,
-    {
-      inviteeName,
-      workspaceName,
-    }: {
-      inviteeName: string;
-      workspaceName: string;
-    }
+    props: { inviteeName: string; workspaceName: string }
   ) {
-    const title = `${inviteeName} accepted your invitation`;
+    const { html, subject } = await renderMemberAcceptedMail(props);
 
-    const html = emailTemplate({
-      title,
-      content: `${inviteeName} has joined ${workspaceName}`,
-    });
     return this.sendMail({
       to,
-      subject: title,
+      subject,
       html,
     });
   }
 
-  async sendLeaveWorkspaceEmail(
+  async sendMemberLeaveEmail(
     to: string,
-    {
-      inviteeName,
-      workspaceName,
-    }: {
-      inviteeName: string;
-      workspaceName: string;
-    }
+    props: { inviteeName: string; workspaceName: string }
   ) {
-    const title = `${inviteeName} left ${workspaceName}`;
+    const { html, subject } = await renderMemberLeaveMail(props);
 
-    const html = emailTemplate({
-      title,
-      content: `${inviteeName} has left your workspace`,
-    });
     return this.sendMail({
       to,
-      subject: title,
+      subject,
       html,
     });
   }
