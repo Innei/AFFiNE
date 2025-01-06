@@ -226,6 +226,11 @@ export const BlocksuiteDocEditor = forwardRef<
   const isJournal = !!useLiveData(journalService.journalDate$(page.id));
 
   const editorSettingService = useService(EditorSettingService);
+  const docService = useService(DocService);
+
+  const updatedDate = useLiveData(
+    docService.doc.meta$.selector(m => m.updatedDate)
+  );
 
   const onDocRef = useCallback(
     (el: PageEditor) => {
@@ -332,7 +337,7 @@ export const BlocksuiteDocEditor = forwardRef<
           onClick={onClickBlank}
         ></div>
         {/* TODO(@CatsJuice): empty judgement should be optimized */}
-        {!page.meta?.updatedDate ? <StarterBar doc={page} /> : null}
+        {!updatedDate ? <StarterBar doc={page} /> : null}
         {!shared && displayBiDirectionalLink ? (
           <BiDirectionalLinkPanel />
         ) : null}

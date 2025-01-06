@@ -83,6 +83,7 @@ export const StarterBar = ({ doc }: { doc: Blocks }) => {
             }}
           >
             <Badge
+              data-testid="template-docs-badge"
               icon={<TemplateColoredIcon />}
               text={t['com.affine.page-starter-bar.template']()}
               active={templateMenuOpen}

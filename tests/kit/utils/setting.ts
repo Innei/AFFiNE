@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export async function clickCollaborationPanel(page: Page) {
   await page.click('[data-tab-key="collaboration"]');
@@ -49,4 +49,30 @@ export async function clickUserInfoCard(page: Page) {
   await page.getByTestId('user-info-card').click({
     delay: 50,
   });
+}
+
+export async function toggleFeatureFlag(
+  page: Page,
+  flag: string,
+  value = true
+) {
+  await openSettingModal(page);
+  await openExperimentalFeaturesPanel(page);
+  const prompt = page.getByTestId('experimental-prompt');
+  await expect(prompt).toBeVisible();
+  await confirmExperimentalPrompt(page);
+  const settings = page.getByTestId('experimental-settings');
+  await expect(settings).toBeVisible();
+
+  const featureRow = settings.getByTestId(`experimental-feature-${flag}`);
+  const switchValue = await featureRow
+    .locator('input[type="checkbox"]')
+    .inputValue();
+
+  const targetValue = value ? 'on' : 'off';
+
+  if (switchValue !== targetValue) {
+    await featureRow.getByTestId('feature-switch').click();
+  }
+  await page.keyboard.press('Escape');
 }
