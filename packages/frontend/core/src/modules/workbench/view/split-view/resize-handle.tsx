@@ -2,15 +2,16 @@ import { useDropTarget } from '@affine/component';
 import type { AffineDNDData } from '@affine/core/types/dnd';
 import { useLiveData, useService } from '@toeverything/infra';
 import type { HTMLAttributes } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import type { View } from '../../entities/view';
 import { WorkbenchService } from '../../services/workbench';
 import * as styles from './split-view.css';
+import { allowedSplitViewEntityTypes } from './types';
 
 interface ResizeHandleProps extends HTMLAttributes<HTMLDivElement> {
   state: 'resizing' | 'drop-indicator' | 'idle';
-  position: 'left' | 'right';
+  edge: 'left' | 'right';
   view: View;
   onResizeStart?: () => void;
   onResizeEnd?: () => void;
@@ -19,14 +20,18 @@ interface ResizeHandleProps extends HTMLAttributes<HTMLDivElement> {
 export const ResizeHandle = ({
   state,
   view,
-  position,
+  edge,
   onResizing,
   onResizeStart,
   onResizeEnd,
 }: ResizeHandleProps) => {
-  const [draggingOver, setDraggingOver] = useState(false);
   const workbench = useService(WorkbenchService).workbench;
   const views = useLiveData(workbench.views$);
+
+  const draggingOverHandle = useLiveData(workbench.draggingOverResizeHandle$);
+
+  const draggingOver =
+    draggingOverHandle?.edge === edge && draggingOverHandle.viewId === view.id;
 
   const index = views.findIndex(v => v.id === view.id);
 
@@ -37,20 +42,18 @@ export const ResizeHandle = ({
     return {
       data: {
         at: 'workbench:resize-handle',
-        position,
+        edge,
         viewId: view.id,
       },
       canDrop: data => {
-        return data.source.data.entity?.type === 'doc';
-      },
-      onDragEnter: () => {
-        setDraggingOver(true);
-      },
-      onDragLeave: () => {
-        setDraggingOver(false);
+        return (
+          (!!data.source.data.entity?.type &&
+            allowedSplitViewEntityTypes.has(data.source.data.entity?.type)) ||
+          data.source.data.from?.at === 'workbench:link'
+        );
       },
     };
-  }, [position, view.id]);
+  }, [edge, view.id]);
 
   // TODO(@catsjuice): touch support
   const onMouseDown = useCallback(
@@ -87,18 +90,18 @@ export const ResizeHandle = ({
 
   const canResize =
     state === 'idle' &&
-    !(isLast && position === 'right') &&
-    !(isFirst && position === 'left');
+    !(isLast && edge === 'right') &&
+    !(isFirst && edge === 'left');
 
   return (
     <div
       ref={dropTargetRef}
-      data-position={position}
+      data-edge={edge}
       onMouseDown={onMouseDown}
       data-is-last={isLast}
       data-is-first={isFirst}
       data-state={state}
-      data-dragging-over={state === 'drop-indicator' ? draggingOver : undefined}
+      data-dragging-over={state === 'drop-indicator' ? draggingOver : false}
       data-can-resize={canResize}
       className={styles.resizeHandle}
     />

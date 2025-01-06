@@ -9,6 +9,7 @@ import * as styles from './indicator.css';
 
 export interface SplitViewMenuProps extends HTMLAttributes<HTMLDivElement> {
   active?: boolean;
+  dragging?: boolean;
   open?: boolean;
   onOpenMenu?: () => void;
 }
@@ -16,7 +17,14 @@ export interface SplitViewMenuProps extends HTMLAttributes<HTMLDivElement> {
 export const SplitViewMenuIndicator = memo(
   forwardRef<HTMLDivElement, SplitViewMenuProps>(
     function SplitViewMenuIndicator(
-      { className, active, open, onOpenMenu, ...attrs }: SplitViewMenuProps,
+      {
+        className,
+        active,
+        open,
+        onOpenMenu,
+        dragging,
+        ...attrs
+      }: SplitViewMenuProps,
       ref
     ) {
       const onClick: MouseEventHandler = useCallback(() => {
@@ -27,12 +35,16 @@ export const SplitViewMenuIndicator = memo(
         <div
           ref={ref}
           data-active={active}
+          data-dragging={dragging}
           data-testid="split-view-indicator"
           className={clsx(className, styles.indicator)}
           onClick={onClick}
           {...attrs}
         >
-          <div className={styles.indicatorInner} />
+          <div className={styles.indicatorGradient} />
+          <div className={styles.indicatorDot} />
+          <div className={styles.indicatorDot} />
+          <div className={styles.indicatorDot} />
         </div>
       );
     }
@@ -98,7 +110,8 @@ export const SplitViewIndicator = memo(
             ref={dragHandleRef}
             open={menuOpen}
             onOpenMenu={openMenu}
-            active={isActive || isDragging}
+            active={isActive}
+            dragging={isDragging}
           />
         </div>
       );

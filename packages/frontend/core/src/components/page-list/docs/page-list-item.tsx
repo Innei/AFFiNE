@@ -180,7 +180,8 @@ export const PageListItem = (props: PageListItemProps) => {
         },
       },
     }),
-    [props.draggable, props.pageId]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props.draggable, props.pageId, props.selectable]
   );
 
   return (

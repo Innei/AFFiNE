@@ -221,6 +221,10 @@ test('open split view in all docs (drag to resize handle)', async ({
   await clickNewPageButton(page, testTitle);
   await clickSideBarAllPageButton(page);
   await waitForAllPagesLoad(page);
+
+  // case for AF-2061. toggle selection checkbox
+  await page.getByTestId('page-list-header-selection-checkbox').click();
+
   const pageItem = page.getByTestId('page-list-item').filter({
     hasText: testTitle,
   });
@@ -229,6 +233,22 @@ test('open split view in all docs (drag to resize handle)', async ({
 
   await dragTo(page, pageItem, leftResizeHandle, 'center');
   await expectTabTitle(page, 0, ['test-page', 'All docs']);
+});
+
+test('creating split view by dragging sidebar journals', async ({ page }) => {
+  const journalButton = page.getByTestId('slider-bar-journals-button');
+  const leftResizeHandle = page.getByTestId('resize-handle').first();
+
+  await dragTo(page, journalButton, leftResizeHandle, 'center');
+  await expect(page.getByTestId('split-view-panel')).toHaveCount(2);
+  await expect(
+    page
+      .getByTestId('split-view-panel')
+      .filter({
+        has: page.locator('[data-is-first="true"]'),
+      })
+      .getByTestId('date-today-label')
+  ).toBeVisible();
 });
 
 test('drag a page from "All pages" list to tabs header', async ({ page }) => {

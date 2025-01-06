@@ -1,7 +1,7 @@
 import { assignInlineVars } from '@vanilla-extract/dynamic';
 import clsx from 'clsx';
 import { forwardRef, useCallback, useLayoutEffect, useRef } from 'react';
-import { useTransition } from 'react-transition-state';
+import { useTransitionState } from 'react-transition-state';
 
 import { useDropTarget } from '../../ui/dnd';
 import { Tooltip, type TooltipProps } from '../../ui/tooltip';
@@ -186,12 +186,12 @@ export const ResizePanel = forwardRef<HTMLDivElement, ResizePanelProps>(
     ref
   ) {
     const safeWidth = Math.min(maxWidth, Math.max(minWidth, width));
-    const [{ status }, toggle] = useTransition({
+    const [{ status }, toggle] = useTransitionState({
       timeout: animationTimeout,
     });
     useLayoutEffect(() => {
       toggle(open);
-    }, [open]);
+    }, [open, toggle]);
     return (
       <div
         {...rest}

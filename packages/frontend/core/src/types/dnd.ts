@@ -86,9 +86,13 @@ export interface AffineDNDData extends DNDData {
           viewId: string;
         }
       | {
+          at: 'workbench:link';
+          to: string;
+        }
+      | {
           at: 'workbench:resize-handle';
           viewId: string;
-          position: 'left' | 'right';
+          edge: 'left' | 'right';
         }
       | {
           at: 'blocksuite-editor';

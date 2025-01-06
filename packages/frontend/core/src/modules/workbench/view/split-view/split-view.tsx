@@ -1,8 +1,7 @@
 import { useDndMonitor } from '@affine/component';
 import { useAppSettingHelper } from '@affine/core/components/hooks/affine/use-app-setting-helper';
-import { DesktopApiService } from '@affine/core/modules/desktop-api';
 import type { AffineDNDData } from '@affine/core/types/dnd';
-import { useService, useServiceOptional } from '@toeverything/infra';
+import { useService } from '@toeverything/infra';
 import clsx from 'clsx';
 import type { HTMLAttributes } from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
@@ -11,6 +10,7 @@ import type { View } from '../../entities/view';
 import { WorkbenchService } from '../../services/workbench';
 import { SplitViewPanel } from './panel';
 import * as styles from './split-view.css';
+import { allowedSplitViewEntityTypes, inferToFromEntity } from './types';
 
 export interface SplitViewProps extends HTMLAttributes<HTMLDivElement> {
   /**
@@ -34,7 +34,6 @@ export const SplitView = ({
   const rootRef = useRef<HTMLDivElement>(null);
   const { appSettings } = useAppSettingHelper();
   const workbench = useService(WorkbenchService).workbench;
-  const electronApi = useServiceOptional(DesktopApiService);
 
   // workaround: blocksuite's lit host element has an issue on remounting.
   // we do not want the view to change its render ordering here after reordering
@@ -78,48 +77,55 @@ export const SplitView = ({
     [onMove]
   );
 
-  const [draggingDoc, setDraggingDoc] = useState(false);
+  const [draggingEntity, setDraggingEntity] = useState(false);
 
   useDndMonitor<AffineDNDData>(() => {
     return {
       // todo(@pengx17): external data for monitor is not supported yet
       // allowExternal: true,
-      onDragStart(data) {
-        if (
-          data.source.data?.entity?.type === 'doc' &&
-          !(
-            data.source.data?.from?.at === 'app-header:tabs' &&
-            data.source.data?.from?.tabId === electronApi?.appInfo.viewId
-          )
+      canMonitor(data) {
+        // allow dropping doc && tab view to split view panel
+        const from = data.source.data.from;
+        const entity = data.source.data.entity;
+        if (from?.at === 'app-header:tabs') {
+          return false;
+        } else if (
+          entity?.type &&
+          allowedSplitViewEntityTypes.has(entity?.type)
         ) {
-          setDraggingDoc(true);
+          return true;
+        } else if (from?.at === 'workbench:link') {
+          return true;
         }
+        return false;
+      },
+      onDragStart() {
+        setDraggingEntity(true);
       },
       onDrop(data) {
-        setDraggingDoc(false);
-        if (!data.source.data.entity) {
-          return;
-        }
-
+        setDraggingEntity(false);
         const candidate = data.location.current.dropTargets.find(
           target => target.data.at === 'workbench:resize-handle'
         );
+
         if (!candidate) {
           return;
         }
 
-        const from = candidate.data as AffineDNDData['draggable']['from'];
+        const dropTarget = candidate.data as AffineDNDData['draggable']['from'];
+        const entity = data.source.data.entity;
+        const from = data.source.data.from;
 
-        if (from?.at === 'workbench:resize-handle') {
-          const { position, viewId } = from;
+        if (dropTarget?.at === 'workbench:resize-handle') {
+          const { edge, viewId } = dropTarget;
           const index = views.findIndex(v => v.id === viewId);
           const at = (() => {
-            if (position === 'left') {
+            if (edge === 'left') {
               if (index === 0) {
                 return 'head';
               }
               return index - 1;
-            } else if (position === 'right') {
+            } else if (edge === 'right') {
               if (index === views.length - 1) {
                 return 'tail';
               }
@@ -128,9 +134,32 @@ export const SplitView = ({
               return 'tail';
             }
           })();
-          const to = `/${data.source.data.entity.id}`;
-          workbench.createView(at, to);
+
+          const to = entity
+            ? inferToFromEntity(entity)
+            : from?.at === 'workbench:link'
+              ? from.to
+              : null;
+
+          if (to) {
+            workbench.createView(at, to);
+          }
         }
+      },
+      onDropTargetChange(data) {
+        const candidate = data.location.current.dropTargets.find(
+          target => target.data.at === 'workbench:resize-handle'
+        );
+
+        if (!candidate) {
+          workbench.draggingOverResizeHandle$.value = null;
+          return;
+        }
+
+        workbench.draggingOverResizeHandle$.value = {
+          viewId: candidate.data.viewId as string,
+          edge: candidate.data.edge as 'left' | 'right',
+        };
       },
     };
   }, []);
@@ -152,7 +181,7 @@ export const SplitView = ({
             key={view.id}
             onMove={handleOnMove}
             onResizing={dxy => onResizing(order, dxy)}
-            draggingDoc={draggingDoc}
+            draggingEntity={draggingEntity}
           >
             {renderer(view)}
           </SplitViewPanel>

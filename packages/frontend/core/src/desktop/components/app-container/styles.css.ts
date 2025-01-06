@@ -78,14 +78,12 @@ export const mainContainerStyle = style({
   width: '100%',
   display: 'flex',
   flex: 1,
-  overflow: 'clip',
   maxWidth: '100%',
 
   selectors: {
     '&[data-client-border="true"]': {
       borderRadius: 6,
       padding: '8px',
-      overflow: 'clip',
       '@media': {
         print: {
           overflow: 'visible',

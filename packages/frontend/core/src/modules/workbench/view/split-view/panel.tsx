@@ -8,10 +8,10 @@ import {
 import type { AffineDNDData } from '@affine/core/types/dnd';
 import { useI18n } from '@affine/i18n';
 import {
-  ExpandCloseIcon,
-  MoveToLeftDuotoneIcon,
-  MoveToRightDuotoneIcon,
-  SoloViewIcon,
+  CloseIcon,
+  ExpandFullIcon,
+  InsertLeftIcon,
+  InsertRightIcon,
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { assignInlineVars } from '@vanilla-extract/dynamic';
@@ -23,6 +23,7 @@ import { WorkbenchService } from '../../services/workbench';
 import { SplitViewIndicator } from './indicator';
 import { ResizeHandle } from './resize-handle';
 import * as styles from './split-view.css';
+import { allowedSplitViewEntityTypes } from './types';
 
 export interface SplitViewPanelProps
   extends PropsWithChildren<HTMLAttributes<HTMLDivElement>> {
@@ -31,7 +32,7 @@ export interface SplitViewPanelProps
   resizeHandle?: React.ReactNode;
   onMove: (from: number, to: number) => void;
   onResizing: (dxy: { x: number; y: number }) => void;
-  draggingDoc: boolean;
+  draggingEntity: boolean;
 }
 
 export const SplitViewPanelContainer = ({
@@ -89,7 +90,7 @@ export const SplitViewPanel = memo(function SplitViewPanel({
   view,
   onMove,
   onResizing,
-  draggingDoc,
+  draggingEntity,
   index,
 }: SplitViewPanelProps) {
   const size = useLiveData(view.size$);
@@ -97,10 +98,10 @@ export const SplitViewPanel = memo(function SplitViewPanel({
 
   const activeView = useLiveData(workbench.activeView$);
   const views = useLiveData(workbench.views$);
-  const isLast = views[views.length - 1] === view;
+
   const isActive = activeView === view;
 
-  const draggingOver = useLiveData(workbench.draggingOver$);
+  const draggingOverView = useLiveData(workbench.draggingOverView$);
   const draggingView = useLiveData(workbench.draggingView$);
   const resizingView = useLiveData(workbench.resizingView$);
 
@@ -109,10 +110,13 @@ export const SplitViewPanel = memo(function SplitViewPanel({
       calculateOrder(
         index,
         draggingView?.index ?? -1,
-        draggingOver?.index ?? -1
+        draggingOverView?.index ?? -1
       ),
-    [index, draggingView, draggingOver]
+    [index, draggingView, draggingOverView]
   );
+
+  const isFirst = order === 0;
+  const isLast = views.length - 1 === order;
 
   const style = useMemo(() => {
     return {
@@ -125,38 +129,41 @@ export const SplitViewPanel = memo(function SplitViewPanel({
 
   const { dropTargetRef } = useDropTarget<AffineDNDData>(() => {
     const handleDrag = (data: DropTargetDragEvent<AffineDNDData>) => {
-      if (data.source.data.from?.at !== 'workbench:view') {
-        return;
-      }
+      // only the first view has left edge
+      const edge = data.closestEdge as 'left' | 'right';
+      const switchEdge = edge === 'left' && !isFirst;
 
-      if (
-        shallowEqual(workbench.draggingOver$.value, {
-          view,
-          index: order,
-        })
-      ) {
-        return;
-      }
-
-      workbench.draggingOver$.value = {
-        view,
+      const newDraggingOver = {
+        view: switchEdge ? views[index - 1] : view,
         index: order,
+        edge: switchEdge ? 'right' : edge,
       };
+      const currentDraggingOver = workbench.draggingOverView$.value;
 
-      if (data.source.data.from?.viewId === view.id) {
+      if (shallowEqual(currentDraggingOver, newDraggingOver)) {
         return;
       }
+
+      workbench.draggingOverView$.value = newDraggingOver;
     };
 
     return {
+      closestEdge: {
+        allowedEdges: ['left', 'right'],
+      },
       isSticky: true,
       canDrop(data) {
-        return data.source.data.from?.at === 'workbench:view';
+        const entityType = data.source.data.entity?.type;
+        return (
+          data.source.data.from?.at === 'workbench:view' ||
+          data.source.data.from?.at === 'workbench:link' ||
+          (!!entityType && allowedSplitViewEntityTypes.has(entityType))
+        );
       },
       onDragEnter: handleDrag,
       onDrag: handleDrag,
     };
-  }, [order, view, workbench.draggingOver$]);
+  }, [index, isFirst, order, view, views, workbench.draggingOverView$]);
 
   const { dragRef, dragHandleRef } = useDraggable<AffineDNDData>(() => {
     return {
@@ -169,11 +176,11 @@ export const SplitViewPanel = memo(function SplitViewPanel({
         };
       },
       onDrop() {
-        if (order !== index && workbench.draggingOver$.value) {
-          onMove?.(index, workbench.draggingOver$.value.index);
+        if (order !== index && workbench.draggingOverView$.value) {
+          onMove?.(index, workbench.draggingOverView$.value.index);
         }
         workbench.draggingView$.value = null;
-        workbench.draggingOver$.value = null;
+        workbench.draggingOverView$.value = null;
       },
       onDragStart() {
         workbench.draggingView$.value = {
@@ -188,7 +195,7 @@ export const SplitViewPanel = memo(function SplitViewPanel({
     onMove,
     order,
     view,
-    workbench.draggingOver$,
+    workbench.draggingOverView$,
     workbench.draggingView$,
   ]);
 
@@ -202,20 +209,28 @@ export const SplitViewPanel = memo(function SplitViewPanel({
     workbench.resizingView$.value = null;
   }, [workbench.resizingView$]);
 
+  const indicatingEdge =
+    draggingOverView?.view === view ? draggingOverView.edge : null;
+
   return (
     <SplitViewPanelContainer
       style={style}
       data-is-dragging={dragging}
       data-is-active={isActive && views.length > 1}
+      data-is-first={isFirst}
       data-is-last={isLast}
       data-testid="split-view-panel"
       draggable={false} // only drag via drag handle
     >
-      {index === 0 ? (
+      {isFirst ? (
         <ResizeHandle
-          position="left"
+          edge="left"
           view={view}
-          state={draggingDoc ? 'drop-indicator' : 'idle'}
+          state={
+            draggingEntity && indicatingEdge === 'left'
+              ? 'drop-indicator'
+              : 'idle'
+          }
         />
       ) : null}
       <div
@@ -240,12 +255,12 @@ export const SplitViewPanel = memo(function SplitViewPanel({
       </div>
       {!draggingView ? (
         <ResizeHandle
-          position="right"
+          edge="right"
           view={view}
           state={
             resizingView?.view.id === view.id
               ? 'resizing'
-              : draggingDoc
+              : draggingEntity && indicatingEdge === 'right'
                 ? 'drop-indicator'
                 : 'idle'
           }
@@ -287,31 +302,28 @@ const SplitViewMenu = ({
 
   const CloseItem =
     views.length > 1 ? (
-      <MenuItem prefixIcon={<ExpandCloseIcon />} onClick={handleClose}>
+      <MenuItem prefixIcon={<CloseIcon />} onClick={handleClose}>
         {t['com.affine.workbench.split-view-menu.close']()}
       </MenuItem>
     ) : null;
 
   const MoveLeftItem =
     viewIndex > 0 && views.length > 1 ? (
-      <MenuItem onClick={handleMoveLeft} prefixIcon={<MoveToLeftDuotoneIcon />}>
+      <MenuItem onClick={handleMoveLeft} prefixIcon={<InsertRightIcon />}>
         {t['com.affine.workbench.split-view-menu.move-left']()}
       </MenuItem>
     ) : null;
 
   const FullScreenItem =
     views.length > 1 ? (
-      <MenuItem onClick={handleCloseOthers} prefixIcon={<SoloViewIcon />}>
+      <MenuItem onClick={handleCloseOthers} prefixIcon={<ExpandFullIcon />}>
         {t['com.affine.workbench.split-view-menu.keep-this-one']()}
       </MenuItem>
     ) : null;
 
   const MoveRightItem =
     viewIndex < views.length - 1 ? (
-      <MenuItem
-        onClick={handleMoveRight}
-        prefixIcon={<MoveToRightDuotoneIcon />}
-      >
+      <MenuItem onClick={handleMoveRight} prefixIcon={<InsertLeftIcon />}>
         {t['com.affine.workbench.split-view-menu.move-right']()}
       </MenuItem>
     ) : null;

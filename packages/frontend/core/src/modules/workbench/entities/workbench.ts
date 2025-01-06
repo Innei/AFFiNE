@@ -12,7 +12,7 @@ import { View } from './view';
 
 export type WorkbenchPosition = 'beside' | 'active' | 'head' | 'tail' | number;
 
-type WorkbenchOpenOptions = {
+export type WorkbenchOpenOptions = {
   at?: WorkbenchPosition | 'new-tab';
   replaceHistory?: boolean;
   show?: boolean; // only for new tab
@@ -57,9 +57,15 @@ export class Workbench extends Entity {
     index: number;
   } | null>(null);
 
-  draggingOver$ = new LiveData<{
+  draggingOverView$ = new LiveData<{
     view: View;
     index: number;
+    edge: 'left' | 'right';
+  } | null>(null);
+
+  draggingOverResizeHandle$ = new LiveData<{
+    viewId: string;
+    edge: 'left' | 'right';
   } | null>(null);
 
   location$ = LiveData.computed(get => {

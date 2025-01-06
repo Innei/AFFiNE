@@ -16,6 +16,7 @@ import type { PropsWithChildren, ReactElement } from 'react';
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { WorkbenchService } from '../../workbench';
+import { allowedSplitViewEntityTypes } from '../../workbench/view/split-view/types';
 import { WorkspaceService } from '../../workspace';
 import { AppSidebarService } from '../services/app-sidebar';
 import * as styles from './fallback.css';
@@ -161,12 +162,16 @@ export function AppSidebar({ children }: PropsWithChildren) {
 
         return {
           at: 'workbench:resize-handle',
-          position: 'left', // left of the first view
+          edge: 'left', // left of the first view
           viewId: firstView.id,
         };
       },
       canDrop: (data: DropTargetGetFeedback<AffineDNDData>) => {
-        return data.source.data.entity?.type === 'doc';
+        return (
+          (!!data.source.data.entity?.type &&
+            allowedSplitViewEntityTypes.has(data.source.data.entity?.type)) ||
+          data.source.data.from?.at === 'workbench:link'
+        );
       },
     });
   }, [workbenchService.views$.value]);

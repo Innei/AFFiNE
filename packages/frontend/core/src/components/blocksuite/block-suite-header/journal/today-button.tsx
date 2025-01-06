@@ -8,7 +8,9 @@ export const JournalTodayButton = () => {
   const journalHelper = useJournalRouteHelper();
 
   const onToday = useCallback(() => {
-    journalHelper.openToday();
+    journalHelper.openToday({
+      replaceHistory: true,
+    });
   }, [journalHelper]);
 
   return (
