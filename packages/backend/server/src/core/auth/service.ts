@@ -418,12 +418,8 @@ export class AuthService implements OnApplicationBootstrap {
 
   async sendSignInEmail(email: string, link: string, signUp: boolean) {
     return signUp
-      ? await this.mailer.sendSignUpMail(link, {
-          to: email,
-        })
-      : await this.mailer.sendSignInMail(link, {
-          to: email,
-        });
+      ? await this.mailer.sendSignUpMail(email, link)
+      : await this.mailer.sendSignInMail(email, link);
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)

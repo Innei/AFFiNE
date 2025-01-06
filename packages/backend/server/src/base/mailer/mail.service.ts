@@ -11,7 +11,11 @@ import {
   getRoleChangedTemplate,
   type RoleChangedMailParams,
 } from './template';
-import { renderSignUpEmail } from './templates';
+import {
+  renderInviteEmail,
+  renderSignInEmail,
+  renderSignUpEmail,
+} from './templates';
 
 @Injectable()
 export class MailService {
@@ -50,56 +54,31 @@ export class MailService {
     to: string,
     inviteId: string,
     invitationInfo: {
-      workspace: {
-        id: string;
-        name: string;
-        avatar: string;
-      };
-      user: {
-        avatar: string;
-        name: string;
-      };
+      workspace: { id: string; name: string; avatar: string };
+      user: { avatar: string; name: string };
     }
   ) {
+    const {
+      user: { name: userName, avatar: userAvatar },
+      workspace: { name: workspaceName, avatar: workspaceAvatar },
+    } = invitationInfo;
     const buttonUrl = this.url.link(`/invite/${inviteId}`);
-    const workspaceAvatar = invitationInfo.workspace.avatar;
-
-    const content = `<p style="margin:0">${
-      invitationInfo.user.avatar
-        ? `<img
-    src="${invitationInfo.user.avatar}"
-    alt=""
-    width="24px"
-    height="24px"
-    style="width:24px; height:24px; border-radius: 12px;object-fit: cover;vertical-align: middle"
-  />`
-        : ''
-    }
-  <span style="font-weight:500;margin-right: 4px;">${
-    invitationInfo.user.name
-  }</span>
-  <span>invited you to join</span>
-  <img
-    src="cid:workspaceAvatar"
-    alt=""
-    width="24px"
-    height="24px"
-    style="width:24px; height:24px; margin-left:4px;border-radius: 12px;object-fit: cover;vertical-align: middle"
-  />
-  <span style="font-weight:500;margin-right: 4px;">${
-    invitationInfo.workspace.name
-  }</span></p><p style="margin-top:8px;margin-bottom:0;">Click button to join this workspace</p>`;
 
     const html = emailTemplate({
       title: 'You are invited!',
-      content,
+      content: await renderInviteEmail({
+        userName,
+        userAvatar,
+        workspaceName,
+        url: buttonUrl,
+      }),
       buttonContent: 'Accept & Join',
       buttonUrl,
     });
 
     return this.sendMail({
       to,
-      subject: `${invitationInfo.user.name} invited you to join ${invitationInfo.workspace.name}`,
+      subject: `${userName} invited you to join ${workspaceName}`,
       html,
       attachments: [
         {
@@ -112,26 +91,19 @@ export class MailService {
     });
   }
 
-  async sendSignUpMail(url: string, options: Options) {
+  async sendSignUpMail(to: string, url: string) {
     return this.sendMail({
+      to,
       html: await renderSignUpEmail({ url }),
       subject: 'Your AFFiNE account is waiting for you!',
-      ...options,
     });
   }
 
-  async sendSignInMail(url: string, options: Options) {
-    const html = emailTemplate({
-      title: 'Sign in to AFFiNE',
-      content:
-        'Click the button below to securely sign in. The magic link will expire in 30 minutes.',
-      buttonContent: 'Sign in to AFFiNE',
-      buttonUrl: url,
-    });
+  async sendSignInMail(to: string, url: string) {
     return this.sendMail({
-      html,
+      to,
+      html: await renderSignInEmail({ url }),
       subject: 'Sign in to AFFiNE',
-      ...options,
     });
   }
 

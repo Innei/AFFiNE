@@ -1,7 +1,17 @@
 import { render } from '@react-email/render';
 
-import SignUp from './sign-up';
+import Invite, { type InviteProps } from './invite';
+import SignIn, { type SignInProps } from './sign-in';
+import SignUp, { type SignUpProps } from './sign-up';
 
-export const renderSignUpEmail = (props: { url: string }): Promise<string> => {
-  return render(<SignUp url={props.url} />);
+export const renderInviteEmail = (props: InviteProps): Promise<string> => {
+  return render(<Invite {...props} />);
+};
+
+export const renderSignInEmail = (props: SignInProps): Promise<string> => {
+  return render(<SignIn {...props} />);
+};
+
+export const renderSignUpEmail = (props: SignUpProps): Promise<string> => {
+  return render(<SignUp {...props} />);
 };

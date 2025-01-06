@@ -1,6 +1,8 @@
+import type { JSX } from 'react';
+
 export type EmailTemplateProps = {
   title: string;
-  content: string;
+  content: JSX.Element | string;
   buttonContent?: string;
   buttonUrl?: string;
   subContent?: string;

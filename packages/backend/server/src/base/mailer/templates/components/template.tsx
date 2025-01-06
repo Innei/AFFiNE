@@ -16,6 +16,23 @@ import { SubContent } from './sub-content';
 
 export const EmailTemplate = (props: EmailTemplateProps) => {
   const { title, content } = props;
+
+  const mainContent =
+    typeof content === 'string' ? (
+      <Text
+        style={{
+          ...BasicTextStyle,
+          fontSize: '15px',
+          lineHeight: '24px',
+          color: '#444',
+        }}
+      >
+        {content}
+      </Text>
+    ) : (
+      content
+    );
+
   return (
     <Html>
       <Head />
@@ -52,18 +69,7 @@ export const EmailTemplate = (props: EmailTemplateProps) => {
               {title}
             </Text>
           </Section>
-          <Section>
-            <Text
-              style={{
-                ...BasicTextStyle,
-                fontSize: '15px',
-                lineHeight: '24px',
-                color: '#444',
-              }}
-            >
-              {content}
-            </Text>
-          </Section>
+          <Section>{mainContent}</Section>
           <ActionButton {...props} />
           <SubContent {...props} />
         </Container>
