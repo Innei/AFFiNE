@@ -205,6 +205,11 @@ export class AffinePageDraggingAreaWidget extends WidgetComponent<
         const container = this.block.rootElementContainer;
         if (!container) return;
 
+        const currentFocus = document.activeElement;
+        if (!container.contains(currentFocus)) {
+          return;
+        }
+
         const containerRect = container.getBoundingClientRect();
         const containerStyles = window.getComputedStyle(container);
         const paddingLeft = parseFloat(containerStyles.paddingLeft);
