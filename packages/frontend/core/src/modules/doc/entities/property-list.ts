@@ -3,6 +3,7 @@ import {
   generateFractionalIndexingKeyBetween,
   LiveData,
 } from '@toeverything/infra';
+import { combineLatest, map } from 'rxjs';
 
 import type { DocCustomPropertyInfo } from '../../db/schema/schema';
 import type { FeatureFlagService } from '../../feature-flag';
@@ -17,26 +18,26 @@ export class DocPropertyList extends Entity {
   }
 
   properties$ = LiveData.from(
-    this.docPropertiesStore.watchDocPropertyInfoList(),
+    combineLatest([
+      this.docPropertiesStore.watchDocPropertyInfoList(),
+      this.featureFlagService.flags.enable_template_doc.$,
+    ]).pipe(
+      map(([properties, enableTemplateDoc]) => {
+        return properties.filter(property => {
+          if (property.id === 'template') {
+            return enableTemplateDoc;
+          }
+          return true;
+        });
+      })
+    ),
     []
   );
 
-  sortedProperties$ = LiveData.computed(get => {
-    const enableTemplateDoc = get(
-      this.featureFlagService.flags.enable_template_doc.$
-    );
-    const properties = get(this.properties$);
-
+  sortedProperties$ = this.properties$.map(list =>
     // default index key is '', so always before any others
-    return properties
-      .toSorted((a, b) => ((a.index ?? '') > (b.index ?? '') ? 1 : -1))
-      .filter(property => {
-        if (property.id === 'template') {
-          return enableTemplateDoc;
-        }
-        return true;
-      });
-  });
+    list.toSorted((a, b) => ((a.index ?? '') > (b.index ?? '') ? 1 : -1))
+  );
 
   propertyInfo$(id: string) {
     return this.properties$.map(list => list.find(info => info.id === id));
