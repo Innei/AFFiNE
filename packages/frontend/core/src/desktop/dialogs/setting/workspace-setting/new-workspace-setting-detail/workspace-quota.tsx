@@ -11,6 +11,15 @@ import * as styles from './style.css';
 
 export const WorkspaceQuotaPanel = () => {
   const t = useI18n();
+  const workspacePermissionService = useService(
+    WorkspacePermissionService
+  ).permission;
+  const isTeam = useLiveData(workspacePermissionService.isTeam$);
+
+  if (!isTeam) {
+    return null;
+  }
+
   return (
     <SettingRow
       name={t['com.affine.workspace.storage']()}
@@ -24,11 +33,9 @@ export const WorkspaceQuotaPanel = () => {
 
 export const StorageProgress = () => {
   const t = useI18n();
-  const workspacePermissionService = useService(
-    WorkspacePermissionService
-  ).permission;
+
   const workspaceQuotaService = useService(WorkspaceQuotaService).quota;
-  const isTeam = useLiveData(workspacePermissionService.isTeam$);
+
   const isLoading = useLiveData(workspaceQuotaService.isRevalidating$);
   const usedFormatted = useLiveData(workspaceQuotaService.usedFormatted$);
   const maxFormatted = useLiveData(workspaceQuotaService.maxFormatted$);
@@ -47,10 +54,6 @@ export const StorageProgress = () => {
       return <ErrorMessage>Load error</ErrorMessage>;
     }
     return <Skeleton height={42} />;
-  }
-
-  if (!isTeam) {
-    return null;
   }
 
   return (
