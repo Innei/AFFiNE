@@ -136,6 +136,10 @@ export const getTeamWorkspaceExpireContent = (props: TeamExpireRemindProps) => {
 };
 
 export default function TeamExpireRemind(props: TeamExpireRemindProps) {
-  const { title, content } = getTeamWorkspaceExpireContent(props);
-  return <EmailTemplate title={title} content={content} />;
+  const { title, content, button } = getTeamWorkspaceExpireContent({
+    ...props,
+    // polyfill for mail preview
+    expirationDate: props.expirationDate || new Date(),
+  });
+  return <EmailTemplate title={title} content={content} {...button} />;
 }

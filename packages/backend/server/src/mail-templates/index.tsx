@@ -230,10 +230,9 @@ export const renderTeamMemberRemovedMail = async (
 export const renderTeamExpireRemindMail = async (
   props: TeamExpireRemindProps
 ): Promise<EmailContent> => {
-  const { subject, button } = getTeamWorkspaceExpireContent(props);
+  const { subject } = getTeamWorkspaceExpireContent(props);
   return {
     subject,
     html: await render(<TeamExpireRemind {...props} />),
-    ...button,
   };
 };
