@@ -158,6 +158,8 @@ export class SocketConnection extends AutoReconnectConnection<Socket> {
     autoConnect: false,
     transports: ['websocket'],
     secure: new URL(this.endpoint).protocol === 'https:',
+    // we will handle reconnection by ourselves
+    reconnection: false,
   });
 
   constructor(
@@ -171,18 +173,31 @@ export class SocketConnection extends AutoReconnectConnection<Socket> {
     return `socket:${this.endpoint}`;
   }
 
-  override async doConnect() {
+  override async doConnect(signal?: AbortSignal) {
     const conn = this.manager.socket('/', this.socketOptions);
+    conn.timeout(30000);
 
-    await new Promise<void>((resolve, reject) => {
-      conn.once('connect', () => {
-        resolve();
-      });
-      conn.once('connect_error', err => {
-        reject(err);
-      });
-      conn.open();
-    });
+    try {
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          conn.once('connect', () => {
+            resolve();
+          });
+          conn.once('connect_error', err => {
+            reject(err);
+          });
+          conn.open();
+        }),
+        new Promise<void>((_resolve, reject) => {
+          signal?.addEventListener('abort', () => {
+            reject(new Error('Aborted'));
+          });
+        }),
+      ]);
+    } catch (err) {
+      conn.disconnect();
+      throw err;
+    }
 
     return conn;
   }

@@ -24,10 +24,10 @@ export abstract class AutoReconnectConnection<T = any>
 {
   private readonly event = new EventEmitter2();
   private _inner: T | null = null;
+  private _unsubscribeError: (() => void) | null = null;
   private _status: ConnectionStatus = 'idle';
   protected error?: Error;
   private refCount = 0;
-  private _enableAutoReconnect = false;
   private connectingAbort?: AbortController;
 
   constructor() {
@@ -52,7 +52,7 @@ export abstract class AutoReconnectConnection<T = any>
     return this._inner;
   }
 
-  protected set inner(inner: T | null) {
+  private set inner(inner: T | null) {
     this._inner = inner;
   }
 
@@ -60,7 +60,7 @@ export abstract class AutoReconnectConnection<T = any>
     return this._status;
   }
 
-  protected setStatus(status: ConnectionStatus, error?: Error) {
+  private setStatus(status: ConnectionStatus, error?: Error) {
     const shouldEmit = status !== this._status || error !== this.error;
     this._status = status;
     this.error = error;
@@ -71,10 +71,13 @@ export abstract class AutoReconnectConnection<T = any>
 
   protected abstract doConnect(signal?: AbortSignal): Promise<T>;
   protected abstract doDisconnect(conn: T): void;
+  protected abstract subscribeError(
+    conn: T,
+    cb: (reason?: Error) => void
+  ): void;
 
   private innerConnect() {
     if (this.status === 'idle' || this.status === 'error') {
-      this._enableAutoReconnect = true;
       this.setStatus('connecting');
       this.connectingAbort = new AbortController();
       this.doConnect(this.connectingAbort.signal)
@@ -82,6 +85,9 @@ export abstract class AutoReconnectConnection<T = any>
           if (!this.connectingAbort?.signal.aborted) {
             this.setStatus('connected');
             this._inner = value;
+            this.subscribeError(this._inner, reason =>
+              this.handleError(reason)
+            );
           } else {
             try {
               this.doDisconnect(value);
@@ -99,6 +105,22 @@ export abstract class AutoReconnectConnection<T = any>
     }
   }
 
+  private handleError(reason?: Error) {
+    // on error
+    console.error('connection error, will reconnect', reason);
+    try {
+      if (this._inner) {
+        this.doDisconnect(this._inner);
+      }
+    } catch (error) {
+      console.error('failed to disconnect', error);
+    }
+    this._inner = null;
+    this.setStatus('error', reason);
+    // reconnect
+    this.innerConnect();
+  }
+
   connect() {
     this.refCount++;
     if (this.refCount === 1) {
@@ -109,8 +131,8 @@ export abstract class AutoReconnectConnection<T = any>
   disconnect() {
     this.refCount--;
     if (this.refCount === 0) {
-      this._enableAutoReconnect = false;
       this.connectingAbort?.abort();
+      this._unsubscribeError();
       try {
         if (this._inner) {
           this.doDisconnect(this._inner);
@@ -118,8 +140,9 @@ export abstract class AutoReconnectConnection<T = any>
       } catch (error) {
         console.error('failed to disconnect', error);
       }
-      this.setStatus('closed');
+      this._unsubscribeError = null;
       this._inner = null;
+      this.setStatus('closed');
     }
   }
 

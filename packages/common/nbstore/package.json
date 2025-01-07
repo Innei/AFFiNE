@@ -9,6 +9,7 @@
     "./worker/client": "./src/worker/client.ts",
     "./worker/consumer": "./src/worker/consumer.ts",
     "./idb": "./src/impls/idb/index.ts",
+    "./broadcast-channel": "./src/impls/broadcast-channel/index.ts",
     "./idb/v1": "./src/impls/idb/v1/index.ts",
     "./cloud": "./src/impls/cloud/index.ts",
     "./sqlite": "./src/impls/sqlite/index.ts",

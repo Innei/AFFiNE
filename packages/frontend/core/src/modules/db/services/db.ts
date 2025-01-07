@@ -41,8 +41,8 @@ export class WorkspaceDBService extends Service {
           new YjsDBAdapter(AFFiNE_WORKSPACE_DB_SCHEMA, {
             getDoc: guid => {
               const ydoc = new YDoc({
-                // guid format: db${workspaceId}${guid}
-                guid: `db$${this.workspaceService.workspace.id}$${guid}`,
+                // guid format: db${guid}
+                guid: `db$${guid}`,
               });
               this.workspaceService.workspace.engine.doc.addDoc(ydoc, false);
               this.workspaceService.workspace.engine.doc.addPriority(
@@ -54,8 +54,7 @@ export class WorkspaceDBService extends Service {
           })
         ),
         schema: AFFiNE_WORKSPACE_DB_SCHEMA,
-        storageDocId: tableName =>
-          `db$${this.workspaceService.workspace.id}$${tableName}`,
+        storageDocId: tableName => `db$${tableName}`,
       }
     ) as WorkspaceDBWithTables<AFFiNEWorkspaceDbSchema>;
   }
@@ -74,8 +73,8 @@ export class WorkspaceDBService extends Service {
           new YjsDBAdapter(AFFiNE_WORKSPACE_USERDATA_DB_SCHEMA, {
             getDoc: guid => {
               const ydoc = new YDoc({
-                // guid format: userdata${userId}${workspaceId}${guid}
-                guid: `userdata$${userId}$${this.workspaceService.workspace.id}$${guid}`,
+                // guid format: userdata${userId}${guid}
+                guid: `userdata$${userId}$${guid}`,
               });
               this.workspaceService.workspace.engine.doc.addDoc(ydoc, false);
               this.workspaceService.workspace.engine.doc.addPriority(
@@ -87,8 +86,7 @@ export class WorkspaceDBService extends Service {
           })
         ),
         schema: AFFiNE_WORKSPACE_USERDATA_DB_SCHEMA,
-        storageDocId: tableName =>
-          `userdata$${userId}$${this.workspaceService.workspace.id}$${tableName}`,
+        storageDocId: tableName => `userdata$${userId}$${tableName}`,
       }
     );
 
@@ -102,17 +100,17 @@ export class WorkspaceDBService extends Service {
 }
 
 export async function transformWorkspaceDBLocalToCloud(
-  localWorkspaceId: string,
-  cloudWorkspaceId: string,
+  _localWorkspaceId: string,
+  _cloudWorkspaceId: string,
   localDocStorage: DocStorage,
   cloudDocStorage: DocStorage,
   accountId: string
 ) {
   for (const tableName of Object.keys(AFFiNE_WORKSPACE_DB_SCHEMA)) {
-    const localDocName = `db$${localWorkspaceId}$${tableName}`;
+    const localDocName = `db$${tableName}`;
     const localDoc = await localDocStorage.getDoc(localDocName);
     if (localDoc) {
-      const cloudDocName = `db$${cloudWorkspaceId}$${tableName}`;
+      const cloudDocName = `db$${tableName}`;
       await cloudDocStorage.pushDocUpdate({
         docId: cloudDocName,
         bin: localDoc.bin,
@@ -121,10 +119,10 @@ export async function transformWorkspaceDBLocalToCloud(
   }
 
   for (const tableName of Object.keys(AFFiNE_WORKSPACE_USERDATA_DB_SCHEMA)) {
-    const localDocName = `userdata$__local__$${localWorkspaceId}$${tableName}`;
+    const localDocName = `userdata$__local__$${tableName}`;
     const localDoc = await localDocStorage.getDoc(localDocName);
     if (localDoc) {
-      const cloudDocName = `userdata$${accountId}$${cloudWorkspaceId}$${tableName}`;
+      const cloudDocName = `userdata$${accountId}$${tableName}`;
       await cloudDocStorage.pushDocUpdate({
         docId: cloudDocName,
         bin: localDoc.bin,

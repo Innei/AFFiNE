@@ -283,7 +283,22 @@ class LocalWorkspaceFlavourProvider implements WorkspaceFlavourProvider {
           },
         },
       },
-      remotes: {},
+      remotes: {
+        v1: {
+          doc: {
+            name: 'IndexedDBV1DocStorage',
+            opts: {
+              id: workspaceId,
+            },
+          },
+          blob: {
+            name: 'IndexedDBV1BlobStorage',
+            opts: {
+              id: workspaceId,
+            },
+          },
+        },
+      },
     };
   }
 }

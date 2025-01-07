@@ -151,7 +151,7 @@ export abstract class DocStorageBase<Opts = {}> implements DocStorage {
 
     return {
       docId,
-      missing: state ? diffUpdate(doc.bin, state) : doc.bin,
+      missing: state && state.length > 0 ? diffUpdate(doc.bin, state) : doc.bin,
       state: encodeStateVectorFromUpdate(doc.bin),
       timestamp: doc.timestamp,
     };
