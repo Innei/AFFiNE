@@ -13,3 +13,4 @@ export * from './parse-url-service';
 export * from './quick-search-service';
 export * from './telemetry-service';
 export * from './theme-service';
+export * from './toolbar-service';

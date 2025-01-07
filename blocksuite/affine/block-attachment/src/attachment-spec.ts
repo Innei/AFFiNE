@@ -1,4 +1,9 @@
-import { BlockViewExtension, FlavourExtension } from '@blocksuite/block-std';
+import { ToolbarModuleExtension } from '@blocksuite/affine-shared/services';
+import {
+  BlockFlavourIdentifier,
+  BlockViewExtension,
+  FlavourExtension,
+} from '@blocksuite/block-std';
 import type { ExtensionType } from '@blocksuite/store';
 import { literal } from 'lit/static-html.js';
 
@@ -12,10 +17,12 @@ import {
   AttachmentEmbedService,
 } from './embed.js';
 
+const Flavour = 'affine:attachment';
+
 export const AttachmentBlockSpec: ExtensionType[] = [
-  FlavourExtension('affine:attachment'),
+  FlavourExtension(Flavour),
   AttachmentBlockService,
-  BlockViewExtension('affine:attachment', model => {
+  BlockViewExtension(Flavour, model => {
     return model.parent?.flavour === 'affine:surface'
       ? literal`affine-edgeless-attachment`
       : literal`affine-attachment`;
@@ -24,4 +31,7 @@ export const AttachmentBlockSpec: ExtensionType[] = [
   AttachmentEmbedConfigExtension(),
   AttachmentEmbedService,
   AttachmentBlockNotionHtmlAdapterExtension,
+  ToolbarModuleExtension({
+    id: BlockFlavourIdentifier(Flavour),
+  }),
 ];

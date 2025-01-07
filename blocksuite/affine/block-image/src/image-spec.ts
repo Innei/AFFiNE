@@ -1,5 +1,7 @@
 import { ImageSelectionExtension } from '@blocksuite/affine-shared/selection';
+import { ToolbarModuleExtension } from '@blocksuite/affine-shared/services';
 import {
+  BlockFlavourIdentifier,
   BlockViewExtension,
   CommandExtension,
   FlavourExtension,
@@ -12,11 +14,13 @@ import { ImageBlockAdapterExtensions } from './adapters/extension.js';
 import { commands } from './commands/index.js';
 import { ImageBlockService, ImageDropOption } from './image-service.js';
 
+const Flavour = 'affine:image';
+
 export const ImageBlockSpec: ExtensionType[] = [
-  FlavourExtension('affine:image'),
+  FlavourExtension(Flavour),
   ImageBlockService,
   CommandExtension(commands),
-  BlockViewExtension('affine:image', model => {
+  BlockViewExtension(Flavour, model => {
     const parent = model.doc.getParent(model.id);
 
     if (parent?.flavour === 'affine:surface') {
@@ -25,10 +29,13 @@ export const ImageBlockSpec: ExtensionType[] = [
 
     return literal`affine-image`;
   }),
-  WidgetViewMapExtension('affine:image', {
+  WidgetViewMapExtension(Flavour, {
     imageToolbar: literal`affine-image-toolbar-widget`,
   }),
   ImageDropOption,
   ImageSelectionExtension,
   ImageBlockAdapterExtensions,
+  ToolbarModuleExtension({
+    id: BlockFlavourIdentifier(Flavour),
+  }),
 ].flat();

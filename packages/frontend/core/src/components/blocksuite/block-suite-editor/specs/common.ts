@@ -21,6 +21,7 @@ import {
   ParagraphBlockSpec,
   RefNodeSlotsExtension,
   RichTextExtensions,
+  ToolbarRegistryExtension,
 } from '@blocksuite/affine/blocks';
 import type { ExtensionType } from '@blocksuite/affine/store';
 
@@ -38,6 +39,7 @@ const CommonBlockSpecs: ExtensionType[] = [
   AttachmentBlockSpec,
   AdapterFactoryExtensions,
   FontLoaderService,
+  ToolbarRegistryExtension,
 ].flat();
 
 export const DefaultBlockSpecs: ExtensionType[] = [

@@ -5,6 +5,7 @@ import {
   EmbedOptionService,
   PageViewportServiceExtension,
   ThemeService,
+  ToolbarRegistryExtension,
 } from '@blocksuite/affine-shared/services';
 import { AFFINE_DRAG_HANDLE_WIDGET } from '@blocksuite/affine-widget-drag-handle';
 import { AFFINE_FRAME_TITLE_WIDGET } from '@blocksuite/affine-widget-frame-title';
@@ -102,6 +103,7 @@ const EdgelessCommonExtension: ExtensionType[] = [
   PageViewportServiceExtension,
   RootBlockAdapterExtensions,
   FileDropExtension,
+  ToolbarRegistryExtension,
 ].flat();
 
 export const EdgelessRootBlockSpec: ExtensionType[] = [

@@ -5,6 +5,7 @@ import {
   EmbedOptionService,
   PageViewportServiceExtension,
   ThemeService,
+  ToolbarRegistryExtension,
 } from '@blocksuite/affine-shared/services';
 import { AFFINE_DRAG_HANDLE_WIDGET } from '@blocksuite/affine-widget-drag-handle';
 import { AFFINE_DOC_REMOTE_SELECTION_WIDGET } from '@blocksuite/affine-widget-remote-selection';
@@ -83,6 +84,7 @@ export const PageRootBlockSpec: ExtensionType[] = [
   DNDAPIExtension,
   RootBlockAdapterExtensions,
   FileDropExtension,
+  ToolbarRegistryExtension,
 ].flat();
 
 export const PreviewPageRootBlockSpec: ExtensionType[] = [
