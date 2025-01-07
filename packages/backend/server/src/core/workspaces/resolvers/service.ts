@@ -132,7 +132,7 @@ export class WorkspaceService {
 
     await this.mailer.sendMemberAcceptedEmail(inviter.email, {
       inviteeName: invitee.name,
-      workspaceName: workspace.name,
+      workspace,
     });
     return true;
   }

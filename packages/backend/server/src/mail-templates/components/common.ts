@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 
 export type EmailTemplateProps = {
   title: string;
@@ -18,7 +18,7 @@ export const DefaultProps: EmailTemplateProps = {
     'If you did not request this invitation, please ignore this email.',
 };
 
-export const BasicTextStyle: React.CSSProperties = {
+export const BasicTextStyle: CSSProperties = {
   fontSize: '12px',
   fontWeight: '400',
   lineHeight: '20px',

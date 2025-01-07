@@ -1,4 +1,6 @@
-import { EmailTemplate } from './components';
+import { Text } from '@react-email/components';
+
+import { EmailTemplate, WorkspaceAvatar } from './components';
 
 export type MemberLeaveProps = {
   inviteeName: string;
@@ -10,7 +12,12 @@ export default function MemberLeave(props: MemberLeaveProps) {
   return (
     <EmailTemplate
       title={`${inviteeName} left ${workspaceName}`}
-      content={`${inviteeName} has left your workspace`}
+      content={
+        <Text>
+          {inviteeName} has left your workspace
+          <WorkspaceAvatar workspaceName={workspaceName} />
+        </Text>
+      }
     />
   );
 }

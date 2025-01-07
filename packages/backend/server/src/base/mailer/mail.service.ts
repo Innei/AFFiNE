@@ -10,6 +10,7 @@ import {
   renderSetPasswordMail,
   renderSignInMail,
   renderSignUpMail,
+  renderTeamWorkspaceUpgradedMail,
   renderVerifyChangeEmailMail,
   renderVerifyEmailMail,
 } from '../../mail-templates';
@@ -138,29 +139,21 @@ export class MailService {
     });
   }
 
-  async sendMemberInviteMail(
-    to: string,
-    inviteId: string,
-    invitationInfo: {
-      workspace: { id: string; name: string; avatar: string };
-      user: { avatar: string; name: string };
-    }
-  ) {
+  // =================== Workspace Mails ===================
+
+  private extractWorkspaceInfo(ws: {
+    id: string;
+    name: string;
+    avatar: string;
+  }) {
     const {
-      user: { name: userName, avatar: userAvatar },
-      workspace: { name: workspaceName, avatar: workspaceAvatar },
-    } = invitationInfo;
-    const buttonUrl = this.url.link(`/invite/${inviteId}`);
-    const { html, subject } = await renderMemberInviteMail({
-      userName,
-      userAvatar,
+      id: workspaceId,
+      name: workspaceName,
+      avatar: workspaceAvatar,
+    } = ws;
+    return {
+      workspaceId,
       workspaceName,
-      url: buttonUrl,
-    });
-    return this.sendMail({
-      to,
-      subject,
-      html,
       attachments: [
         {
           cid: 'workspaceAvatar',
@@ -169,66 +162,77 @@ export class MailService {
           encoding: 'base64',
         },
       ],
+    };
+  }
+
+  async sendMemberInviteMail(
+    to: string,
+    inviteId: string,
+    invitationInfo: {
+      workspace: { id: string; name: string; avatar: string };
+      user: { avatar: string; name: string };
+    }
+  ) {
+    const { name: userName, avatar: userAvatar } = invitationInfo.user;
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(
+      invitationInfo.workspace
+    );
+    const { html, subject } = await renderMemberInviteMail({
+      userName,
+      userAvatar,
+      workspaceName,
+      url: this.url.link(`/invite/${inviteId}`),
     });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
   async sendMemberAcceptedEmail(
     to: string,
-    props: { inviteeName: string; workspaceName: string }
+    props: {
+      inviteeName: string;
+      workspace: { id: string; name: string; avatar: string };
+    }
   ) {
-    const { html, subject } = await renderMemberAcceptedMail(props);
-
-    return this.sendMail({
-      to,
-      subject,
-      html,
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(
+      props.workspace
+    );
+    const { html, subject } = await renderMemberAcceptedMail({
+      inviteeName: props.inviteeName,
+      workspaceName,
     });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
   async sendMemberLeaveEmail(
     to: string,
-    props: { inviteeName: string; workspaceName: string }
+    props: {
+      inviteeName: string;
+      workspace: { id: string; name: string; avatar: string };
+    }
   ) {
-    const { html, subject } = await renderMemberLeaveMail(props);
-
-    return this.sendMail({
-      to,
-      subject,
-      html,
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(
+      props.workspace
+    );
+    const { html, subject } = await renderMemberLeaveMail({
+      inviteeName: props.inviteeName,
+      workspaceName,
     });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
   // =================== Team Workspace Mails ===================
   async sendTeamWorkspaceUpgradedEmail(
     to: string,
-    ws: { id: string; name: string; isOwner: boolean }
+    ws: { id: string; name: string; avatar: string; isOwner: boolean }
   ) {
-    const { id: workspaceId, name: workspaceName, isOwner } = ws;
-
-    const baseContent = {
-      subject: `${workspaceName} has been upgraded to team workspace! 🎉`,
-      title: 'Welcome to the team workspace!',
-      content: `Great news! ${workspaceName} has been upgraded to team workspace by the workspace owner. You now have access to the following enhanced features:`,
-    };
-    if (isOwner) {
-      baseContent.subject =
-        'Your workspace has been upgraded to team workspace! 🎉';
-      baseContent.title = 'Welcome to the team workspace!';
-      baseContent.content = `${workspaceName} has been upgraded to team workspace with the following benefits:`;
-    }
-
-    const html = emailTemplate({
-      title: baseContent.title,
-      content: `${baseContent.content}
-✓ 100 GB initial storage + 20 GB per seat
-✓ 500 MB of maximum file size
-✓ Unlimited team members (10+ seats)
-✓ Multiple admin roles
-✓ Priority customer support`,
-      buttonContent: 'Open Workspace',
-      buttonUrl: this.url.link(`/workspace/${workspaceId}`),
+    const { workspaceId, workspaceName, attachments } =
+      this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamWorkspaceUpgradedMail({
+      url: this.url.link(`/workspace/${workspaceId}`),
+      workspaceName,
+      isOwner: ws.isOwner,
     });
-    return this.sendMail({ to, subject: baseContent.subject, html });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
   async sendReviewRequestEmail(

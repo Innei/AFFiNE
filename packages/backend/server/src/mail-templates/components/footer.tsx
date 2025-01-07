@@ -1,8 +1,9 @@
 import { Container, Img, Link, Row, Section } from '@react-email/components';
+import type { CSSProperties } from 'react';
 
 import { BasicTextStyle } from './common';
 
-const TextStyles: React.CSSProperties = {
+const TextStyles: CSSProperties = {
   ...BasicTextStyle,
   color: '#8e8d91',
   margin: 1,

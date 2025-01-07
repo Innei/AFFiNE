@@ -16,6 +16,9 @@ import ChangePassword, { type ChangePasswordProps } from './password-change';
 import SetPassword, { type SetPasswordProps } from './password-set';
 import SignIn, { type SignInProps } from './sign-in';
 import SignUp, { type SignUpProps } from './sign-up';
+import TeamWorkspaceUpgraded, {
+  type TeamWorkspaceUpgradedProps,
+} from './team-workspace-upgraded';
 
 type EmailContent = Pick<SMTPTransport.Options, 'subject' | 'html'>;
 
@@ -123,5 +126,19 @@ export const renderMemberLeaveMail = async (
   return {
     subject: `${inviteeName} left ${workspaceName}`,
     html: await render(<MemberLeave {...props} />),
+  };
+};
+
+// ================ Team ================
+
+export const renderTeamWorkspaceUpgradedMail = async (
+  props: TeamWorkspaceUpgradedProps
+): Promise<EmailContent> => {
+  const { workspaceName, isOwner } = props;
+  return {
+    subject: isOwner
+      ? 'Your workspace has been upgraded to team workspace! 🎉'
+      : `${workspaceName} has been upgraded to team workspace! 🎉`,
+    html: await render(<TeamWorkspaceUpgraded {...props} />),
   };
 };

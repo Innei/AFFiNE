@@ -1,4 +1,6 @@
-import { EmailTemplate } from './components';
+import { Text } from '@react-email/components';
+
+import { EmailTemplate, WorkspaceAvatar } from './components';
 
 export type MemberAcceptedProps = {
   inviteeName: string;
@@ -10,7 +12,12 @@ export default function MemberAccepted(props: MemberAcceptedProps) {
   return (
     <EmailTemplate
       title={`${inviteeName} accepted your invitation`}
-      content={`${inviteeName} has joined ${workspaceName}`}
+      content={
+        <Text>
+          {inviteeName} has joined
+          <WorkspaceAvatar workspaceName={workspaceName} />
+        </Text>
+      }
     />
   );
 }
