@@ -10,6 +10,9 @@ import {
   renderSetPasswordMail,
   renderSignInMail,
   renderSignUpMail,
+  renderTeamExpireRemindMail,
+  renderTeamMemberRemovedMail,
+  renderTeamOwnershipTransferredMail,
   renderTeamReviewApproveMail,
   renderTeamReviewDeclineMail,
   renderTeamReviewRequestMail,
@@ -24,7 +27,6 @@ import { URLHelper } from '../helpers';
 import { metrics } from '../metrics';
 import type { MailerService, Options } from './mailer';
 import { MAILER_SERVICE } from './mailer';
-import { emailTemplate } from './template';
 
 type Workspace = {
   id: string;
@@ -273,25 +275,19 @@ export class MailService {
   }
 
   async sendOwnershipTransferredEmail(to: string, ws: Workspace) {
-    const { name: workspaceName } = ws;
-    const title = `Your ownership of ${workspaceName} has been transferred`;
-
-    const html = emailTemplate({
-      title: 'Ownership transferred',
-      content: `You have transferred ownership of ${workspaceName}. You are now a admin in this workspace.`,
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamOwnershipTransferredMail({
+      workspaceName,
     });
-    return this.sendMail({ to, subject: title, html });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
   async sendMemberRemovedEmail(to: string, ws: Workspace) {
-    const { name: workspaceName } = ws;
-    const title = `You have been removed from ${workspaceName}`;
-
-    const html = emailTemplate({
-      title: 'Workspace access removed',
-      content: `You have been removed from {workspace name}. You no longer have access to this workspace.`,
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamMemberRemovedMail({
+      workspaceName,
     });
-    return this.sendMail({ to, subject: title, html });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
   async sendWorkspaceExpireRemindEmail(
@@ -307,56 +303,12 @@ export class MailService {
       expirationDate,
       deletionDate,
     } = ws;
-    const baseContent: {
-      subject: string;
-      title: string;
-      content: string;
-      button?: { buttonContent: string; buttonUrl: string };
-    } = {
-      subject: `[Action Required] Your ${workspaceName} team workspace is expiring soon`,
-      title: 'Team workspace expiring soon',
-      content: `Your ${workspaceName} team workspace will expire on ${expirationDate}. After expiration, you won't be able to sync or collaborate with team members. Please renew your subscription to continue using all team features.`,
-      button: {
-        buttonContent: 'Go to Billing',
-        // TODO(@darkskygit): use real billing path
-        buttonUrl: this.url.link(`/workspace/${workspaceId}/billing`),
-      },
-    };
-
-    if (deletionDate) {
-      if (deletionDate < new Date()) {
-        // in 24 hours
-        if (deletionDate.getTime() - Date.now() < 24 * 60 * 60 * 1000) {
-          baseContent.subject = `[Action Required] Final warning: Your ${workspaceName} data will be deleted in 24 hours`;
-          baseContent.title = 'Urgent: Last chance to prevent data loss';
-          baseContent.content = `Your ${workspaceName} team workspace data will be permanently deleted in 24 hours on ${deletionDate}. To prevent data loss, please take immediate action:
-<li>Renew your subscription to restore team features</li>
-<li>Export your workspace data from Workspace Settings > Export Workspace</li>`;
-        } else {
-          baseContent.subject = `[Action Required] Important: Your ${workspaceName} data will be deleted soon`;
-          baseContent.title = 'Take action to prevent data loss';
-          baseContent.content = `Your ${workspaceName} team workspace expired on ${expirationDate}. All workspace data will be permanently deleted on ${deletionDate} (180 days after expiration). To prevent data loss, please either:
-<li>Renew your subscription to restore team features</li>
-<li>Export your workspace data from Workspace Settings > Export Workspace</li>`;
-        }
-      } else {
-        baseContent.subject = `Data deletion completed for ${workspaceName}`;
-        baseContent.title = 'Workspace data deleted';
-        baseContent.content = `All data in ${workspaceName} has been permanently deleted as the workspace remained expired for 180 days. This action cannot be undone.
-Thank you for your support of AFFiNE. We hope to see you again in the future.`;
-        baseContent.button = undefined;
-      }
-    } else if (expirationDate < new Date()) {
-      baseContent.subject = `Your ${workspaceName} team workspace has expired`;
-      baseContent.title = 'Team workspace expired';
-      baseContent.content = `Your ${workspaceName} team workspace expired on ${expirationDate}. Your workspace can't sync or collaborate with team members. Please renew your subscription to restore all team features.`;
-    }
-
-    const html = emailTemplate({
-      title: baseContent.title,
-      content: baseContent.content,
-      ...baseContent.button,
+    const { html, subject } = await renderTeamExpireRemindMail({
+      url: this.url.link(`/workspace/${workspaceId}/billing`),
+      workspaceName,
+      expirationDate,
+      deletionDate,
     });
-    return this.sendMail({ to, subject: baseContent.subject, html });
+    return this.sendMail({ to, subject, html });
   }
 }

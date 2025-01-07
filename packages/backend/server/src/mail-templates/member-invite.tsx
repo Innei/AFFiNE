@@ -10,7 +10,7 @@ export type MemberInviteProps = {
 };
 
 const InviteContent = (props: Omit<MemberInviteProps, 'url'>) => {
-  const { userAvatar, workspaceName } = props;
+  const { userAvatar, userName, workspaceName } = props;
   let avatar = null;
   if (userAvatar) {
     avatar = (
@@ -33,9 +33,7 @@ const InviteContent = (props: Omit<MemberInviteProps, 'url'>) => {
     <>
       <Text>
         {avatar}
-        <span style={{ fontWeight: 500, marginRight: '4px' }}>
-          {workspaceName}
-        </span>
+        <span style={{ fontWeight: 500, marginRight: '4px' }}>{userName}</span>
         <span>invited you to join</span>
         <img
           src="cid:workspaceAvatar"

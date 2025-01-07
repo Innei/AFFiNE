@@ -16,6 +16,16 @@ import ChangePassword, { type ChangePasswordProps } from './password-change';
 import SetPassword, { type SetPasswordProps } from './password-set';
 import SignIn, { type SignInProps } from './sign-in';
 import SignUp, { type SignUpProps } from './sign-up';
+import TeamExpireRemind, {
+  getTeamWorkspaceExpireContent,
+  type TeamExpireRemindProps,
+} from './team-expire-remind';
+import TeamMemberRemoved, {
+  type TeamMemberRemovedProps,
+} from './team-member-removed';
+import TeamOwnershipTransferred, {
+  type TeamOwnershipTransferredProps,
+} from './team-ownership-transferred';
 import TeamReviewApprove, {
   type TeamReviewApproveProps,
 } from './team-review-approve';
@@ -194,5 +204,36 @@ export const renderTeamRoleChangedMail = async (
       ? `You are now an ${role} of ${workspaceName}`
       : `Your role has been changed in ${workspaceName}`,
     html: await render(<TeamRoleChanged {...props} />),
+  };
+};
+
+export const renderTeamOwnershipTransferredMail = async (
+  props: TeamOwnershipTransferredProps
+): Promise<EmailContent> => {
+  const { workspaceName } = props;
+  return {
+    subject: `Your ownership of ${workspaceName} has been transferred`,
+    html: await render(<TeamOwnershipTransferred {...props} />),
+  };
+};
+
+export const renderTeamMemberRemovedMail = async (
+  props: TeamMemberRemovedProps
+): Promise<EmailContent> => {
+  const { workspaceName } = props;
+  return {
+    subject: `Your ownership of ${workspaceName} has been transferred`,
+    html: await render(<TeamMemberRemoved {...props} />),
+  };
+};
+
+export const renderTeamExpireRemindMail = async (
+  props: TeamExpireRemindProps
+): Promise<EmailContent> => {
+  const { subject, button } = getTeamWorkspaceExpireContent(props);
+  return {
+    subject,
+    html: await render(<TeamExpireRemind {...props} />),
+    ...button,
   };
 };

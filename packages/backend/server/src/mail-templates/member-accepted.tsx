@@ -8,13 +8,16 @@ export type MemberAcceptedProps = {
 };
 
 export default function MemberAccepted(props: MemberAcceptedProps) {
-  const { inviteeName, workspaceName } = props;
+  const { inviteeName = 'Unknown User', workspaceName } = props;
   return (
     <EmailTemplate
       title={`${inviteeName} accepted your invitation`}
       content={
         <Text>
-          {inviteeName} has joined
+          <span style={{ fontWeight: 500, marginRight: '4px' }}>
+            {inviteeName}
+          </span>
+          has joined
           <WorkspaceAvatar workspaceName={workspaceName} />
         </Text>
       }

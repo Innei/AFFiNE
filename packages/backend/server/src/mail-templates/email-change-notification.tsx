@@ -10,7 +10,7 @@ export default function ChangeEmailNotification(
   return (
     <EmailTemplate
       title="Verify your current email for AFFiNE"
-      content={`As per your request, we have changed your email. Please make sure you're using ${props.to} when you log in the next time.`}
+      content={`As per your request, we have changed your email. Please make sure you're using ${props.to || 'your new email'} when you log in the next time.`}
     />
   );
 }

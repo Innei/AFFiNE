@@ -15,7 +15,7 @@ export default function TeamReviewRequest(props: TeamReviewRequestProps) {
       title="Request to join your workspace"
       content={
         <Text>
-          ${invitee} has requested to join
+          {invitee} has requested to join
           <WorkspaceAvatar workspaceName={workspaceName} />. As a workspace
           owner/admin, you can approve or decline this request.
         </Text>
