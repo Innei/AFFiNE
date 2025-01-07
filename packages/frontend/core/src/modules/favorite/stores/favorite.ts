@@ -1,9 +1,7 @@
 import { LiveData, Store } from '@toeverything/infra';
 import { map } from 'rxjs';
 
-import { AuthService, type WorkspaceServerService } from '../../cloud';
 import type { WorkspaceDBService } from '../../db';
-import type { WorkspaceService } from '../../workspace';
 import type { FavoriteSupportTypeUnion } from '../constant';
 import { isFavoriteSupportType } from '../constant';
 
@@ -14,41 +12,18 @@ export interface FavoriteRecord {
 }
 
 export class FavoriteStore extends Store {
-  authService = this.workspaceServerService.server?.scope.get(AuthService);
-  constructor(
-    private readonly workspaceDBService: WorkspaceDBService,
-    private readonly workspaceService: WorkspaceService,
-    private readonly workspaceServerService: WorkspaceServerService
-  ) {
+  constructor(private readonly workspaceDBService: WorkspaceDBService) {
     super();
   }
 
-  private get userdataDB$() {
-    // if is local workspace or no account, use __local__ userdata
-    // sometimes we may have cloud workspace but no account for a short time, we also use __local__ userdata
-    if (
-      this.workspaceService.workspace.meta.flavour === 'local' ||
-      !this.authService
-    ) {
-      return new LiveData(this.workspaceDBService.userdataDB('__local__'));
-    } else {
-      return this.authService.session.account$.map(account => {
-        if (!account) {
-          return this.workspaceDBService.userdataDB('__local__');
-        }
-        return this.workspaceDBService.userdataDB(account.id);
-      });
-    }
-  }
-
   watchIsLoading() {
-    return this.userdataDB$
+    return this.workspaceDBService.userdataDB$
       .map(db => LiveData.from(db.favorite.isLoading$, false))
       .flat();
   }
 
   watchFavorites() {
-    return this.userdataDB$
+    return this.workspaceDBService.userdataDB$
       .map(db => LiveData.from(db.favorite.find$(), []))
       .flat()
       .map(raw => {
@@ -63,7 +38,7 @@ export class FavoriteStore extends Store {
     id: string,
     index: string
   ): FavoriteRecord {
-    const db = this.userdataDB$.value;
+    const db = this.workspaceDBService.userdataDB$.value;
     const raw = db.favorite.create({
       key: this.encodeKey(type, id),
       index,
@@ -72,17 +47,17 @@ export class FavoriteStore extends Store {
   }
 
   reorderFavorite(type: FavoriteSupportTypeUnion, id: string, index: string) {
-    const db = this.userdataDB$.value;
+    const db = this.workspaceDBService.userdataDB$.value;
     db.favorite.update(this.encodeKey(type, id), { index });
   }
 
   removeFavorite(type: FavoriteSupportTypeUnion, id: string) {
-    const db = this.userdataDB$.value;
+    const db = this.workspaceDBService.userdataDB$.value;
     db.favorite.delete(this.encodeKey(type, id));
   }
 
   watchFavorite(type: FavoriteSupportTypeUnion, id: string) {
-    const db = this.userdataDB$.value;
+    const db = this.workspaceDBService.userdataDB$.value;
     return LiveData.from<FavoriteRecord | undefined>(
       db.favorite
         .get$(this.encodeKey(type, id))

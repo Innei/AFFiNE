@@ -48,6 +48,10 @@ export const AFFiNE_WORKSPACE_USERDATA_DB_SCHEMA = {
     key: f.string().primaryKey(),
     index: f.string(),
   },
+  settings: {
+    key: f.string().primaryKey(),
+    value: f.json(),
+  },
 } as const satisfies DBSchemaBuilder;
 export type AFFiNEWorkspaceUserdataDbSchema =
   typeof AFFiNE_WORKSPACE_USERDATA_DB_SCHEMA;

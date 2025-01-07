@@ -1,5 +1,6 @@
 import type { Framework } from '@toeverything/infra';
 
+import { WorkspaceServerService } from '../cloud';
 import { WorkspaceScope, WorkspaceService } from '../workspace';
 import { WorkspaceDB } from './entities/db';
 import { WorkspaceDBTable } from './entities/table';
@@ -12,7 +13,7 @@ export { transformWorkspaceDBLocalToCloud } from './services/db';
 export function configureWorkspaceDBModule(framework: Framework) {
   framework
     .scope(WorkspaceScope)
-    .service(WorkspaceDBService, [WorkspaceService])
+    .service(WorkspaceDBService, [WorkspaceService, WorkspaceServerService])
     .entity(WorkspaceDB)
     .entity(WorkspaceDBTable, [WorkspaceService]);
 }

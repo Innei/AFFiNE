@@ -12,6 +12,7 @@ import { ArrowRightSmallIcon } from '@blocksuite/icons/rc';
 import { FrameworkScope } from '@toeverything/infra';
 import { useCallback } from 'react';
 
+import { TemplateDocSetting } from '../template';
 import { DeleteLeaveWorkspace } from './delete-leave-workspace';
 import { EnableCloudPanel } from './enable-cloud';
 import { DesktopExportPanel } from './export';
@@ -60,6 +61,7 @@ export const WorkspaceSettingDetail = ({
           })}
           subtitle={t['com.affine.settings.workspace.description']()}
         />
+        <TemplateDocSetting />
         <SettingWrapper title={t['Info']()}>
           <SettingRow
             name={t['Workspace Profile']()}

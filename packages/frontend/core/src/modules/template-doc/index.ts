@@ -7,6 +7,7 @@ import { TemplateDocList } from './entities/list';
 import { TemplateDocSetting } from './entities/setting';
 import { TemplateDocService } from './services/template-doc';
 import { TemplateDocListStore } from './store/list';
+import { TemplateDocSettingStore } from './store/setting';
 
 export { TemplateDocService };
 export * from './view/template-list-menu';
@@ -17,5 +18,6 @@ export const configureTemplateDocModule = (framework: Framework) => {
     .service(TemplateDocService)
     .store(TemplateDocListStore, [WorkspaceDBService])
     .entity(TemplateDocList, [TemplateDocListStore, DocsService])
-    .entity(TemplateDocSetting);
+    .store(TemplateDocSettingStore, [WorkspaceDBService])
+    .entity(TemplateDocSetting, [TemplateDocSettingStore]);
 };
