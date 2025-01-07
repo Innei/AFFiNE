@@ -16,6 +16,18 @@ import ChangePassword, { type ChangePasswordProps } from './password-change';
 import SetPassword, { type SetPasswordProps } from './password-set';
 import SignIn, { type SignInProps } from './sign-in';
 import SignUp, { type SignUpProps } from './sign-up';
+import TeamReviewApprove, {
+  type TeamReviewApproveProps,
+} from './team-review-approve';
+import TeamReviewDecline, {
+  type TeamReviewDeclineProps,
+} from './team-review-decline';
+import TeamReviewRequest, {
+  type TeamReviewRequestProps,
+} from './team-review-request';
+import TeamRoleChanged, {
+  type TeamRoleChangedProps,
+} from './team-role-changed';
 import TeamWorkspaceUpgraded, {
   type TeamWorkspaceUpgradedProps,
 } from './team-workspace-upgraded';
@@ -140,5 +152,47 @@ export const renderTeamWorkspaceUpgradedMail = async (
       ? 'Your workspace has been upgraded to team workspace! 🎉'
       : `${workspaceName} has been upgraded to team workspace! 🎉`,
     html: await render(<TeamWorkspaceUpgraded {...props} />),
+  };
+};
+
+export const renderTeamReviewRequestMail = async (
+  props: TeamReviewRequestProps
+): Promise<EmailContent> => {
+  const { workspaceName } = props;
+  return {
+    subject: `New request to join ${workspaceName}`,
+    html: await render(<TeamReviewRequest {...props} />),
+  };
+};
+
+export const renderTeamReviewApproveMail = async (
+  props: TeamReviewApproveProps
+): Promise<EmailContent> => {
+  const { workspaceName } = props;
+  return {
+    subject: `Your request to join ${workspaceName} has been approved`,
+    html: await render(<TeamReviewApprove {...props} />),
+  };
+};
+
+export const renderTeamReviewDeclineMail = async (
+  props: TeamReviewDeclineProps
+): Promise<EmailContent> => {
+  const { workspaceName } = props;
+  return {
+    subject: `Your request to join ${workspaceName} was declined`,
+    html: await render(<TeamReviewDecline {...props} />),
+  };
+};
+
+export const renderTeamRoleChangedMail = async (
+  props: TeamRoleChangedProps
+): Promise<EmailContent> => {
+  const { workspaceName, role } = props;
+  return {
+    subject: ['owner', 'admin'].includes(role)
+      ? `You are now an ${role} of ${workspaceName}`
+      : `Your role has been changed in ${workspaceName}`,
+    html: await render(<TeamRoleChanged {...props} />),
   };
 };

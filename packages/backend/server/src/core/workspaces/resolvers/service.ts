@@ -202,20 +202,19 @@ export class WorkspaceService {
 
   async sendReviewApproveEmail(inviteId: string) {
     const target = await this.getInviteeEmailTarget(inviteId);
-
-    if (!target) {
-      return;
-    }
+    if (!target) return;
 
     await this.mailer.sendReviewApproveEmail(target.email, target.workspace);
   }
 
   async sendReviewDeclinedEmail(
     email: string | undefined,
-    workspaceName: string
+    workspaceId: string
   ) {
     if (!email) return;
-    await this.mailer.sendReviewDeclinedEmail(email, { name: workspaceName });
+
+    const workspace = await this.getWorkspaceInfo(workspaceId);
+    await this.mailer.sendReviewDeclinedEmail(email, workspace);
   }
 
   async sendRoleChangedEmail(
@@ -224,25 +223,22 @@ export class WorkspaceService {
   ) {
     const user = await this.user.findUserById(userId);
     if (!user) throw new UserNotFound();
+
     const workspace = await this.getWorkspaceInfo(ws.id);
     await this.mailer.sendRoleChangedEmail(user?.email, {
-      name: workspace.name,
+      ...workspace,
       role: PermissionToRole[ws.role],
     });
   }
 
   async sendOwnerTransferredEmail(email: string, ws: { id: string }) {
     const workspace = await this.getWorkspaceInfo(ws.id);
-    await this.mailer.sendOwnershipTransferredEmail(email, {
-      name: workspace.name,
-    });
+    await this.mailer.sendOwnershipTransferredEmail(email, workspace);
   }
 
   async sendMemberRemoved(email: string, ws: { id: string }) {
     const workspace = await this.getWorkspaceInfo(ws.id);
-    await this.mailer.sendMemberRemovedEmail(email, {
-      name: workspace.name,
-    });
+    await this.mailer.sendMemberRemovedEmail(email, workspace);
   }
 
   @OnEvent('workspace.members.removed')

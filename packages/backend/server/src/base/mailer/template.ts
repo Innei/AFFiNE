@@ -219,38 +219,3 @@ export const emailTemplate = ({
       </table>
     </body>`;
 };
-
-type RoleChangedMail = {
-  subject: string;
-  title: string;
-  content: string;
-};
-
-export type RoleChangedMailParams = {
-  name: string;
-  role: 'owner' | 'admin' | 'member' | 'readonly';
-};
-
-export const getRoleChangedTemplate = (
-  ws: RoleChangedMailParams
-): RoleChangedMail => {
-  const { name, role } = ws;
-  let subject = `You are now an ${role} of ${name}`;
-  let title = 'Role update in workspace';
-  let content = `Your role in ${name} has been changed to ${role}. You can continue to collaborate in this workspace.`;
-
-  switch (role) {
-    case 'owner':
-      title = 'Welcome, new workspace owner!';
-      content = `You have been assigned as the owner of ${name}. As a workspace owner, you have full control over this team workspace.`;
-      break;
-    case 'admin':
-      title = `You've been promoted to admin.`;
-      content = `You have been promoted to admin of ${name}. As an admin, you can help the workspace owner manage members in this workspace.`;
-      break;
-    default:
-      subject = `Your role has been changed in ${name}`;
-      break;
-  }
-  return { subject, title, content };
-};

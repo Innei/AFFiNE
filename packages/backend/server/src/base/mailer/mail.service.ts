@@ -10,6 +10,10 @@ import {
   renderSetPasswordMail,
   renderSignInMail,
   renderSignUpMail,
+  renderTeamReviewApproveMail,
+  renderTeamReviewDeclineMail,
+  renderTeamReviewRequestMail,
+  renderTeamRoleChangedMail,
   renderTeamWorkspaceUpgradedMail,
   renderVerifyChangeEmailMail,
   renderVerifyEmailMail,
@@ -20,11 +24,13 @@ import { URLHelper } from '../helpers';
 import { metrics } from '../metrics';
 import type { MailerService, Options } from './mailer';
 import { MAILER_SERVICE } from './mailer';
-import {
-  emailTemplate,
-  getRoleChangedTemplate,
-  type RoleChangedMailParams,
-} from './template';
+import { emailTemplate } from './template';
+
+type Workspace = {
+  id: string;
+  name: string;
+  avatar: string;
+};
 
 @Injectable()
 export class MailService {
@@ -141,11 +147,7 @@ export class MailService {
 
   // =================== Workspace Mails ===================
 
-  private extractWorkspaceInfo(ws: {
-    id: string;
-    name: string;
-    avatar: string;
-  }) {
+  private extractWorkspaceInfo(ws: Workspace) {
     const {
       id: workspaceId,
       name: workspaceName,
@@ -169,7 +171,7 @@ export class MailService {
     to: string,
     inviteId: string,
     invitationInfo: {
-      workspace: { id: string; name: string; avatar: string };
+      workspace: Workspace;
       user: { avatar: string; name: string };
     }
   ) {
@@ -188,10 +190,7 @@ export class MailService {
 
   async sendMemberAcceptedEmail(
     to: string,
-    props: {
-      inviteeName: string;
-      workspace: { id: string; name: string; avatar: string };
-    }
+    props: { inviteeName: string; workspace: Workspace }
   ) {
     const { workspaceName, attachments } = this.extractWorkspaceInfo(
       props.workspace
@@ -205,10 +204,7 @@ export class MailService {
 
   async sendMemberLeaveEmail(
     to: string,
-    props: {
-      inviteeName: string;
-      workspace: { id: string; name: string; avatar: string };
-    }
+    props: { inviteeName: string; workspace: Workspace }
   ) {
     const { workspaceName, attachments } = this.extractWorkspaceInfo(
       props.workspace
@@ -223,7 +219,7 @@ export class MailService {
   // =================== Team Workspace Mails ===================
   async sendTeamWorkspaceUpgradedEmail(
     to: string,
-    ws: { id: string; name: string; avatar: string; isOwner: boolean }
+    ws: Workspace & { isOwner: boolean }
   ) {
     const { workspaceId, workspaceName, attachments } =
       this.extractWorkspaceInfo(ws);
@@ -235,55 +231,48 @@ export class MailService {
     return this.sendMail({ to, subject, html, attachments });
   }
 
-  async sendReviewRequestEmail(
+  async sendReviewRequestEmail(to: string, invitee: string, ws: Workspace) {
+    const { workspaceId, workspaceName, attachments } =
+      this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamReviewRequestMail({
+      url: this.url.link(`/workspace/${workspaceId}`),
+      invitee,
+      workspaceName,
+    });
+    return this.sendMail({ to, subject, html, attachments });
+  }
+
+  async sendReviewApproveEmail(to: string, ws: Workspace) {
+    const { workspaceId, workspaceName, attachments } =
+      this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamReviewApproveMail({
+      url: this.url.link(`/workspace/${workspaceId}`),
+      workspaceName,
+    });
+    return this.sendMail({ to, subject, html, attachments });
+  }
+
+  async sendReviewDeclinedEmail(to: string, ws: Workspace) {
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamReviewDeclineMail({
+      workspaceName,
+    });
+    return this.sendMail({ to, subject, html, attachments });
+  }
+
+  async sendRoleChangedEmail(
     to: string,
-    invitee: string,
-    ws: { id: string; name: string }
+    ws: Workspace & { role: 'owner' | 'admin' | 'member' | 'readonly' }
   ) {
-    const { id: workspaceId, name: workspaceName } = ws;
-    const title = `New request to join ${workspaceName}`;
-
-    const html = emailTemplate({
-      title: 'Request to join your workspace',
-      content: `${invitee} has requested to join ${workspaceName}. As a workspace owner/admin, you can approve or decline this request.`,
-      buttonContent: 'Review request',
-      buttonUrl: this.url.link(`/workspace/${workspaceId}`),
+    const { workspaceName, attachments } = this.extractWorkspaceInfo(ws);
+    const { html, subject } = await renderTeamRoleChangedMail({
+      workspaceName,
+      role: ws.role,
     });
-    return this.sendMail({ to, subject: title, html });
+    return this.sendMail({ to, subject, html, attachments });
   }
 
-  async sendReviewApproveEmail(to: string, ws: { id: string; name: string }) {
-    const { id: workspaceId, name: workspaceName } = ws;
-    const title = `Your request to join ${workspaceName} has been approved`;
-
-    const html = emailTemplate({
-      title: 'Welcome to the workspace!',
-      content: `Your request to join ${workspaceName} has been accepted. You can now access the team workspace and collaborate with other members.`,
-      buttonContent: 'Open Workspace',
-      buttonUrl: this.url.link(`/workspace/${workspaceId}`),
-    });
-    return this.sendMail({ to, subject: title, html });
-  }
-
-  async sendReviewDeclinedEmail(to: string, ws: { name: string }) {
-    const { name: workspaceName } = ws;
-    const title = `Your request to join ${workspaceName} was declined`;
-
-    const html = emailTemplate({
-      title: 'Request declined',
-      content: `Your request to join ${workspaceName} has been declined by the workspace admin.`,
-    });
-    return this.sendMail({ to, subject: title, html });
-  }
-
-  async sendRoleChangedEmail(to: string, ws: RoleChangedMailParams) {
-    const { subject, title, content } = getRoleChangedTemplate(ws);
-    const html = emailTemplate({ title, content });
-    console.log({ subject, title, content, to });
-    return this.sendMail({ to, subject, html });
-  }
-
-  async sendOwnershipTransferredEmail(to: string, ws: { name: string }) {
+  async sendOwnershipTransferredEmail(to: string, ws: Workspace) {
     const { name: workspaceName } = ws;
     const title = `Your ownership of ${workspaceName} has been transferred`;
 
@@ -294,7 +283,7 @@ export class MailService {
     return this.sendMail({ to, subject: title, html });
   }
 
-  async sendMemberRemovedEmail(to: string, ws: { name: string }) {
+  async sendMemberRemovedEmail(to: string, ws: Workspace) {
     const { name: workspaceName } = ws;
     const title = `You have been removed from ${workspaceName}`;
 
@@ -307,9 +296,7 @@ export class MailService {
 
   async sendWorkspaceExpireRemindEmail(
     to: string,
-    ws: {
-      id: string;
-      name: string;
+    ws: Omit<Workspace, 'avatar'> & {
       expirationDate: Date;
       deletionDate?: Date;
     }

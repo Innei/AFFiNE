@@ -353,11 +353,11 @@ export class TeamWorkspaceResolver {
     workspaceId,
   }: EventPayload<'workspace.members.requestDeclined'>) {
     const user = await this.users.findUserById(userId);
-    const workspace = await this.workspaceService.getWorkspaceInfo(workspaceId);
+
     // send decline mail
     await this.workspaceService.sendReviewDeclinedEmail(
       user?.email,
-      workspace.name
+      workspaceId
     );
   }
 
