@@ -293,6 +293,17 @@ mutation forkCopilotSession($options: ForkChatSessionInput!) {
 }`,
 };
 
+export const generateLicenseKeyMutation = {
+  id: 'generateLicenseKeyMutation' as const,
+  operationName: 'generateLicenseKey',
+  definitionName: 'generateLicenseKey',
+  containsFile: false,
+  query: `
+mutation generateLicenseKey($sessionId: String!) {
+  generateLicenseKey(sessionId: $sessionId)
+}`,
+};
+
 export const getCopilotHistoriesQuery = {
   id: 'getCopilotHistoriesQuery' as const,
   operationName: 'getCopilotHistories',

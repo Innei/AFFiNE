@@ -49,15 +49,21 @@ export const generateSubscriptionCallbackLink = (
   recurring: SubscriptionRecurring,
   workspaceId?: string
 ) => {
-  if (account === null) {
-    throw new Error('Account is required');
-  }
   const baseUrl =
     plan === SubscriptionPlan.AI
       ? '/ai-upgrade-success'
       : plan === SubscriptionPlan.Team
         ? '/upgrade-success/team'
-        : '/upgrade-success';
+        : plan === SubscriptionPlan.SelfHostedTeam
+          ? '/upgrade-success/self-hosted-team'
+          : '/upgrade-success';
+
+  if (plan === SubscriptionPlan.SelfHostedTeam) {
+    return baseUrl;
+  }
+  if (account === null) {
+    throw new Error('Account is required');
+  }
 
   let name = account?.info?.name ?? '';
   if (name.includes(separator)) {

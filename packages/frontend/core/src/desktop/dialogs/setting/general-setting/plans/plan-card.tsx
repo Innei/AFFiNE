@@ -10,6 +10,7 @@ import {
 import { GlobalDialogService } from '@affine/core/modules/dialogs';
 import {
   type CreateCheckoutSessionInput,
+  ServerDeploymentType,
   SubscriptionPlan,
   SubscriptionRecurring,
   SubscriptionStatus,
@@ -121,6 +122,13 @@ const ActionButton = ({ detail, recurring }: PlanCardProps) => {
   const isOnetime = useLiveData(subscriptionService.subscription.isOnetimePro$);
   const isFree = detail.plan === SubscriptionPlan.Free;
 
+  const serverService = useService(ServerService);
+  const isSelfHosted = useLiveData(
+    serverService.server.config$.selector(
+      c => c.type === ServerDeploymentType.Selfhosted
+    )
+  );
+
   const signUpText = useMemo(
     () => getSignUpText(detail.plan, t),
     [detail.plan, t]
@@ -128,8 +136,10 @@ const ActionButton = ({ detail, recurring }: PlanCardProps) => {
 
   // branches:
   //  if contact                                => 'Contact Sales'
+  //  if self-hosted team                       => 'Upgrade'
   //  if not signed in:
   //    if free                                 => 'Sign up free'
+  //    if team                                 => 'Upgrade'
   //    else                                    => 'Buy Pro'
   //  else
   //    if team                                 => 'Start 14-day free trial'
@@ -143,6 +153,13 @@ const ActionButton = ({ detail, recurring }: PlanCardProps) => {
   //    if free                                 => 'Downgrade'
   //    if currentRecurring !== recurring       => 'Change to {recurring} Billing'
   //    else                                    => 'Upgrade'
+
+  // self-hosted team
+  if (isSelfHosted || detail.plan === SubscriptionPlan.SelfHostedTeam) {
+    return (
+      <UpgradeToSelfHostTeam recurring={recurring as SubscriptionRecurring} />
+    );
+  }
 
   // not signed in
   if (!loggedIn) {
@@ -265,6 +282,51 @@ const UpgradeToTeam = ({ recurring }: { recurring: SubscriptionRecurring }) => {
         {t['com.affine.payment.upgrade']()}
       </Button>
     </a>
+  );
+};
+const UpgradeToSelfHostTeam = ({
+  recurring,
+}: {
+  recurring: SubscriptionRecurring;
+}) => {
+  const t = useI18n();
+
+  const handleBeforeCheckout = useCallback(() => {
+    track.$.settingsPanel.plans.checkout({
+      plan: SubscriptionPlan.SelfHostedTeam,
+      recurring: recurring,
+    });
+  }, [recurring]);
+
+  const checkoutOptions = useMemo(
+    () => ({
+      recurring,
+      plan: SubscriptionPlan.SelfHostedTeam,
+      variant: null,
+      coupon: null,
+      successCallbackLink: generateSubscriptionCallbackLink(
+        null,
+        SubscriptionPlan.SelfHostedTeam,
+        recurring
+      ),
+    }),
+    [recurring]
+  );
+
+  return (
+    <CheckoutSlot
+      onBeforeCheckout={handleBeforeCheckout}
+      checkoutOptions={checkoutOptions}
+      renderer={props => (
+        <Button
+          className={clsx(styles.planAction)}
+          variant="primary"
+          {...props}
+        >
+          {t['com.affine.payment.upgrade']()}
+        </Button>
+      )}
+    />
   );
 };
 

@@ -278,7 +278,7 @@ export class SubscriptionResolver {
     if (input.plan === SubscriptionPlan.SelfHostedTeam) {
       session = await this.service.checkout(input, {
         plan: input.plan as any,
-        quantity: input.args.quantity ?? 10,
+        quantity: input.args?.quantity ?? 10,
       });
     } else {
       if (!user) {

@@ -171,6 +171,40 @@ export function getPlanDetail(t: T) {
         benefits: teamBenefits(t),
       },
     ],
+    [
+      SubscriptionPlan.SelfHostedTeam,
+      {
+        type: 'fixed',
+        plan: SubscriptionPlan.SelfHostedTeam,
+        price: '12',
+        yearlyPrice: '10',
+        name: 'Self-hosted Team',
+        description: 'Self-hosted Team description',
+        titleRenderer: (recurring, detail) => {
+          const price =
+            recurring === SubscriptionRecurring.Yearly
+              ? detail.yearlyPrice
+              : detail.price;
+          return (
+            <>
+              {t['com.affine.payment.cloud.team-workspace.title.price-monthly'](
+                {
+                  price: '$' + price,
+                }
+              )}
+              {recurring === SubscriptionRecurring.Yearly ? (
+                <span className={planTitleTitleCaption}>
+                  {t[
+                    'com.affine.payment.cloud.team-workspace.title.billed-yearly'
+                  ]()}
+                </span>
+              ) : null}
+            </>
+          );
+        },
+        benefits: teamBenefits(t),
+      },
+    ],
   ]);
 }
 
