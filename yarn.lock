@@ -3792,6 +3792,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@blocksuite/affine-widget-toolbar@workspace:*, @blocksuite/affine-widget-toolbar@workspace:blocksuite/affine/widget-toolbar":
+  version: 0.0.0-use.local
+  resolution: "@blocksuite/affine-widget-toolbar@workspace:blocksuite/affine/widget-toolbar"
+  dependencies:
+    "@blocksuite/affine-model": "workspace:*"
+    "@blocksuite/affine-shared": "workspace:*"
+    "@blocksuite/block-std": "workspace:*"
+    "@blocksuite/global": "workspace:*"
+    "@preact/signals-core": "npm:^1.8.0"
+    "@toeverything/theme": "npm:^1.1.3"
+    lit: "npm:^3.2.0"
+  languageName: unknown
+  linkType: soft
+
 "@blocksuite/affine@workspace:*, @blocksuite/affine@workspace:blocksuite/affine/all":
   version: 0.0.0-use.local
   resolution: "@blocksuite/affine@workspace:blocksuite/affine/all"
@@ -3856,6 +3870,7 @@ __metadata:
     "@blocksuite/affine-widget-frame-title": "workspace:*"
     "@blocksuite/affine-widget-remote-selection": "workspace:*"
     "@blocksuite/affine-widget-scroll-anchoring": "workspace:*"
+    "@blocksuite/affine-widget-toolbar": "workspace:*"
     "@blocksuite/block-std": "workspace:*"
     "@blocksuite/data-view": "workspace:*"
     "@blocksuite/global": "workspace:*"

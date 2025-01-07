@@ -34,6 +34,7 @@ import { effects as widgetDragHandleEffects } from '@blocksuite/affine-widget-dr
 import { effects as widgetFrameTitleEffects } from '@blocksuite/affine-widget-frame-title/effects';
 import { effects as widgetRemoteSelectionEffects } from '@blocksuite/affine-widget-remote-selection/effects';
 import { effects as widgetScrollAnchoringEffects } from '@blocksuite/affine-widget-scroll-anchoring/effects';
+import { effects as widgetToolbarEffects } from '@blocksuite/affine-widget-toolbar/effects';
 import type { BlockComponent } from '@blocksuite/block-std';
 import { effects as stdEffects } from '@blocksuite/block-std/effects';
 import { effects as dataViewEffects } from '@blocksuite/data-view/effects';
@@ -223,6 +224,7 @@ export function effects() {
   widgetEdgelessElementToolbarEffects();
   widgetRemoteSelectionEffects();
   widgetDragHandleEffects();
+  widgetToolbarEffects();
   dataViewEffects();
 
   customElements.define('affine-page-root', PageRootBlockComponent);

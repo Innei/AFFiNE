@@ -13,6 +13,7 @@ import {
   AFFINE_EDGELESS_REMOTE_SELECTION_WIDGET,
 } from '@blocksuite/affine-widget-remote-selection';
 import { AFFINE_SCROLL_ANCHORING_WIDGET } from '@blocksuite/affine-widget-scroll-anchoring';
+import { AFFINE_TOOLBAR_WIDGET } from '@blocksuite/affine-widget-toolbar';
 import {
   BlockServiceWatcher,
   BlockViewExtension,
@@ -80,6 +81,7 @@ export const edgelessRootWidgetViewMap = {
     AFFINE_EDGELESS_AUTO_CONNECT_WIDGET
   )}`,
   [AFFINE_SCROLL_ANCHORING_WIDGET]: literal`${unsafeStatic(AFFINE_SCROLL_ANCHORING_WIDGET)}`,
+  [AFFINE_TOOLBAR_WIDGET]: literal`${unsafeStatic(AFFINE_TOOLBAR_WIDGET)}`,
   [EDGELESS_DRAGGING_AREA_WIDGET]: literal`${unsafeStatic(EDGELESS_DRAGGING_AREA_WIDGET)}`,
   [NOTE_SLICER_WIDGET]: literal`${unsafeStatic(NOTE_SLICER_WIDGET)}`,
   [EDGELESS_NAVIGATOR_BLACK_BACKGROUND_WIDGET]: literal`${unsafeStatic(EDGELESS_NAVIGATOR_BLACK_BACKGROUND_WIDGET)}`,

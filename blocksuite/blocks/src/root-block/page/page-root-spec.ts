@@ -9,6 +9,7 @@ import {
 import { AFFINE_DRAG_HANDLE_WIDGET } from '@blocksuite/affine-widget-drag-handle';
 import { AFFINE_DOC_REMOTE_SELECTION_WIDGET } from '@blocksuite/affine-widget-remote-selection';
 import { AFFINE_SCROLL_ANCHORING_WIDGET } from '@blocksuite/affine-widget-scroll-anchoring';
+import { AFFINE_TOOLBAR_WIDGET } from '@blocksuite/affine-widget-toolbar';
 import {
   BlockViewExtension,
   CommandExtension,
@@ -61,6 +62,7 @@ export const pageRootWidgetViewMap = {
     AFFINE_VIEWPORT_OVERLAY_WIDGET
   )}`,
   [AFFINE_SCROLL_ANCHORING_WIDGET]: literal`${unsafeStatic(AFFINE_SCROLL_ANCHORING_WIDGET)}`,
+  [AFFINE_TOOLBAR_WIDGET]: literal`${unsafeStatic(AFFINE_TOOLBAR_WIDGET)}`,
 };
 
 const PageCommonExtension: ExtensionType[] = [

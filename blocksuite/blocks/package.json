@@ -37,6 +37,7 @@
     "@blocksuite/affine-widget-frame-title": "workspace:*",
     "@blocksuite/affine-widget-remote-selection": "workspace:*",
     "@blocksuite/affine-widget-scroll-anchoring": "workspace:*",
+    "@blocksuite/affine-widget-toolbar": "workspace:*",
     "@blocksuite/block-std": "workspace:*",
     "@blocksuite/data-view": "workspace:*",
     "@blocksuite/global": "workspace:*",
